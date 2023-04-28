@@ -1,21 +1,44 @@
-package main
+package main // Look README.md
 
 import (
+	"fmt"
+	"log"
+	"os"
+
+	"myapp/api"
+	"myapp/sql"
+
 	"github.com/kataras/iris/v12"
 )
 
 func main() {
-	println("main start")
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci",
+		getenv("MYSQL_USER", "root"),
+		getenv("MYSQL_PASSWORD", "19897216"),
+		getenv("MYSQL_HOST", "ccmeta.com"),
+		getenv("MYSQL_DATABASE", "go_acs"),
+	)
+
+	db, err := sql.ConnectMySQL(dsn)
+	if err != nil {
+		log.Fatalf("error connecting to the MySQL database: %v", err)
+	}
+
+	secret := getenv("JWT_SECRET", "EbnJO3bwmX")
+
 	app := iris.New()
+	subRouter := api.Router(db, secret)
+	app.PartyFunc("/", subRouter)
 
-	// Routers
-	app.Handle("GET", "/", func(ctx iris.Context) {
-		ctx.HTML("<h1>fuck12ss2ss22</h1>")
-	})
-	app.Handle("GET", "/ping", func(ctx iris.Context) {
-		ctx.WriteString("pong")
-	})
+	addr := fmt.Sprintf(":%s", getenv("PORT", "8080"))
+	app.Listen(addr)
+}
 
-	// Config done and go run
-	app.Run(iris.Addr(":8080"))
+func getenv(key string, def string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+
+	return v
 }
