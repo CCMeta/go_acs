@@ -45,6 +45,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tdewolff/minify/v2 v2.12.0 // indirect
 	github.com/tdewolff/parse/v2 v2.6.1 // indirect
+	github.com/tiaguinho/gosoap v1.4.4
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
