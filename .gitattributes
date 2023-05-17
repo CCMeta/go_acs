@@ -1,2 +1,2 @@
-*.html -text
-*.js -text
+*.html linguist-language=txt
+*.js linguist-language=txt
