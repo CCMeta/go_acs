@@ -23,7 +23,7 @@ function XmlAjax(parma = {}) {
                     parma.success(xmlHttp.responseText)
                 }
             } else if (xmlHttp.status === 404) {
-                alert("请求页面不存在！");
+                console.warning("请求页面不存在！");
             }
         }
         if (parma.data) {

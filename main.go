@@ -63,6 +63,25 @@ func run_action(ctx iris.Context) {
 
 	action := ctx.Params().Get("action")
 	switch action {
+	case `network_info`:
+		networkName, _1 := exec.Command("/system/bin/getprop", "gsm.sim.operator.alpha").Output()
+		networkType, _2 := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
+		simStatus, _3 := exec.Command("/system/bin/getprop", "gsm.sim.state").Output()
+		gprsStatus, _4 := exec.Command("/system/bin/settings", "get", "global", "mobile_data").Output()
+		signalStrength, _5 := exec.Command("/system/bin/getprop", "vendor.ril.nw.signalstrength.lte.1").Output()
+		if _1 != nil || _2 != nil || _3 != nil || _4 != nil || _5 != nil {
+			ctx.StopWithError(500, _1)
+			ctx.StopWithError(500, _2)
+			ctx.StopWithError(500, _3)
+			ctx.StopWithError(500, _4)
+			ctx.StopWithError(500, _5)
+			return
+		}
+		ctx.JSON(iris.Map{"networkName": string(networkName),
+			"networkType":    string(networkType),
+			"simStatus":      string(simStatus),
+			"gprsStatus":     string(gprsStatus),
+			"signalStrength": string(signalStrength)})
 	case `network_speed`:
 		upload := rand.Int31()
 		download := rand.Int31()
