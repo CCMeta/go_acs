@@ -6,6 +6,7 @@ import (
 	"log"
 	"myapp/sql"
 	"os"
+	"os/exec"
 
 	"github.com/kataras/iris/v12"
 )
@@ -19,15 +20,15 @@ func main() {
 
 	/*************************Custom Routers****************************/
 
-	acs := app.Party("/")
+	api := app.Party("/api")
 	{
-		acs.Use(iris.Compression)
-		acs.Get("/", list)
-		acs.Post("/", create)
+		api.Use(iris.Compression)
+		api.Get("/{action}", list)
+		api.Post("/{action}", list)
 	}
 
 	/*************************Starting Server****************************/
-	addr := fmt.Sprintf(":%s", getenv("PORT", "8080"))
+	addr := fmt.Sprintf(":%s", getenv("PORT", "9001"))
 	app.Listen(addr)
 }
 
@@ -82,6 +83,22 @@ type XmlItems struct {
 
 func list(ctx iris.Context) {
 
+	action := ctx.Params().Get("action")
+	switch action {
+	case `network_speed`:
+		ctx.WriteString(`{	"result": "ok",	"upload": "881","download": "15593"}`)
+	case `getprop`:
+		result, err := exec.Command("/system/bin/getprop").Output()
+		if err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		ctx.Write(result)
+	default:
+		ctx.WriteString("REQUEST IS FUCKED BY :" + action)
+	}
+
+	ctx.StatusCode(200)
 }
 
 func create(ctx iris.Context) {
