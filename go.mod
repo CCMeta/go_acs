@@ -1,4 +1,4 @@
-module myapp
+module wm24_api
 
 go 1.18
 

@@ -83,18 +83,18 @@ Run `go build -mod=mod` or `go run -mod=mod main.go` and read below.
 Environment variables:
 
 ```sh
-MYSQL_USER=user_myapp
+MYSQL_USER=user_wm24_api
 MYSQL_PASSWORD=dbpassword
 MYSQL_HOST=localhost
-MYSQL_DATABASE=myapp
+MYSQL_DATABASE=wm24_api
 ```
 
 Download the schema from [migration/db.sql](migration/db.sql) and execute it against your MySQL server instance.
 
 ```sql
-CREATE DATABASE IF NOT EXISTS myapp DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS wm24_api DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE myapp;
+USE wm24_api;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -129,7 +129,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 ### Requests
 
-Some request bodies can be found at: [migration/api_category](migration/api_category) and [migration/api_product](migration/api_product). **However** I've provided a [postman.json](migration/myapp_postman.json) Collection that you can import to your [POSTMAN](https://learning.postman.com/docs/postman/collections/importing-and-exporting-data/#collections) and start playing with the API.
+Some request bodies can be found at: [migration/api_category](migration/api_category) and [migration/api_product](migration/api_product). **However** I've provided a [postman.json](migration/wm24_api_postman.json) Collection that you can import to your [POSTMAN](https://learning.postman.com/docs/postman/collections/importing-and-exporting-data/#collections) and start playing with the API.
 
 All write-access endpoints are "protected" via JWT, a client should "verify" itself. You'll need to manually take the **token** from the `http://localhost:8080/token` and put it on url parameter `?token=$token` or to the `Authentication: Bearer $token` request header.
 

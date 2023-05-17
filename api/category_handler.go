@@ -1,9 +1,9 @@
 package api
 
 import (
-	"myapp/entity"
-	"myapp/service"
-	"myapp/sql"
+	"wm24_api/entity"
+	"wm24_api/service"
+	"wm24_api/sql"
 
 	"github.com/kataras/iris/v12"
 )

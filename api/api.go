@@ -4,8 +4,8 @@ package api
 import (
 	"time"
 
-	"myapp/service"
-	"myapp/sql"
+	"wm24_api/service"
+	"wm24_api/sql"
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/jwt"

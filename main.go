@@ -4,17 +4,18 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log"
-	"myapp/sql"
+	"math/rand"
 	"os"
 	"os/exec"
+	"wm24_api/sql"
 
 	"github.com/kataras/iris/v12"
 )
 
 func main() {
-	// db, secret := init_db()
 
 	app := iris.Default()
+	// db, secret := init_db()
 	// subRouter := api.Router(db, secret)
 	// app.PartyFunc("/", subRouter)
 
@@ -23,8 +24,8 @@ func main() {
 	api := app.Party("/api")
 	{
 		api.Use(iris.Compression)
-		api.Get("/{action}", list)
-		api.Post("/{action}", list)
+		api.Get("/{action}", run_action)
+		api.Post("/{action}", run_action)
 	}
 
 	/*************************Starting Server****************************/
@@ -58,6 +59,29 @@ func getenv(key string, def string) string {
 	return v
 }
 
+func run_action(ctx iris.Context) {
+
+	action := ctx.Params().Get("action")
+	switch action {
+	case `network_speed`:
+		upload := rand.Int31()
+		download := rand.Int31()
+		body := fmt.Sprintf(`{	"result": "ok",	"upload": "%v","download": "%v"}`, upload, download)
+		ctx.WriteString(body)
+	case `getprop`:
+		body, err := exec.Command("/system/bin/getprop").Output()
+		if err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		ctx.Write(body)
+	default:
+		ctx.WriteString("REQUEST IS FUCKED BY action = " + action)
+	}
+
+	ctx.StatusCode(200)
+}
+
 type XmlItems struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Header  struct {
@@ -79,26 +103,6 @@ type XmlItems struct {
 			CurrentTime string   `xml:"CurrentTime"`
 		} `xml:"Inform"`
 	} `xml:"Body"`
-}
-
-func list(ctx iris.Context) {
-
-	action := ctx.Params().Get("action")
-	switch action {
-	case `network_speed`:
-		ctx.WriteString(`{	"result": "ok",	"upload": "881","download": "15593"}`)
-	case `getprop`:
-		result, err := exec.Command("/system/bin/getprop").Output()
-		if err != nil {
-			ctx.StopWithError(500, err)
-			return
-		}
-		ctx.Write(result)
-	default:
-		ctx.WriteString("REQUEST IS FUCKED BY :" + action)
-	}
-
-	ctx.StatusCode(200)
 }
 
 func create(ctx iris.Context) {

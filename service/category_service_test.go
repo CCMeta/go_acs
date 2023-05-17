@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"myapp/entity"
-	"myapp/sql"
+	"wm24_api/entity"
+	"wm24_api/sql"
 
 	"github.com/DATA-DOG/go-sqlmock"
 )
