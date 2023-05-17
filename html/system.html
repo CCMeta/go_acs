@@ -426,7 +426,7 @@
     let simStatus = 1;
     function GetNetwork(){
         XmlAjax({
-            url: "/security.html",
+            url: "/api/network_info",
             data: {"network_info": 0},
             success: function(result) {
                 console.log("networkResult:" + result);
@@ -470,7 +470,7 @@
     //获取设备信息
     function GetDeviceInfo(){
         XmlAjax({
-            url: "/system.html",
+            url: "/api/get_device_info",
             data: {"get_device_info":1},
             success: function (result) {
                 console.log("deviceInformationResult:" + result);
@@ -506,7 +506,7 @@
         else if (password.length<3) {toastr.error($("#sys-tip9").html());}
         else {
             XmlAjax({
-                url: "/system.html",
+                url: "/api/login_password",
                 data: {"login_password": JSON.stringify({"password": window.btoa(currentP), "newPassword": window.btoa(password)})},
                 success: function (result) {
                     console.log("setPasswordResult:" + result);
@@ -528,7 +528,7 @@
         $("#rebootTipModal").modal("show");
         setTimeout(function () {window.location.href = "http://192.168.1.1";},15000)
         XmlAjax({
-            url: "/system.html",
+            url: "/api/reset_factory",
             data: {"reset_factory": 1},
             success: function (result) {
                 console.log("factoryResult:" + result);
@@ -542,7 +542,7 @@
     //获取自动升级开关
     function getAutoUpdate() {
         XmlAjax({
-            url:"/system.html",
+            url:"/system",
             data:{"get_auto_update":1},
             success:function (result) {
                 console.log("getAutoUpdateResult:\n" + result);
@@ -555,7 +555,7 @@
     $autoSwitch.on("change", function () {saveAutoUpdate();})
     function saveAutoUpdate() {
         XmlAjax({
-            url:"/system.html",
+            url:"/system",
             data:{"set_auto_update": $autoSwitch.prop("checked") ? 1:0},
             success:function (result) {
                 console.log("SetAutoUpdateResult:\n" + result);
@@ -567,7 +567,7 @@
     //获取fota信息
     function getFotaInfo() {
         XmlAjax({
-            url:"/system.html",
+            url:"/system",
             data:{"get_fota_info": 1},
             success:function (result) {
                 console.log("getFotaInfoResult:\n" + result);
@@ -581,7 +581,7 @@
     function checkForUpdate() {
         $("#checkTip").css("visibility","visible");
         XmlAjax({
-            url:"/system.html",
+            url:"/system",
             data:{"check_version":1},
             success:function (result) {
                 console.log("CheckVersionResult:\n" + result);
@@ -608,7 +608,7 @@
         $("#checkUpdateModal").modal("hide");
         toastr.info($("#sys-tip5").html());
         XmlAjax({
-            url:"/system.html",
+            url:"/system",
             data:{"check_version":2},
             success:function (result) {
                 console.log("UpdateNewVersionResult:" +result);

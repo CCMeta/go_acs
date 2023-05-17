@@ -96,7 +96,7 @@
             }
         }());
         XmlAjax({
-            url: "/system.html",
+            url: "/api/restart",
             data: {"restart": 1},
             success: function (result) {
                 console.log("rebootResult:" + result);

@@ -368,7 +368,7 @@
     },500)}
     function getThreAndSMS() {
         XmlAjax({
-            url: "/network.html",
+            url: "/api/get_data_threshold",
             data: {"get_data_threshold" : 1},
             success: function (result) {
                 console.log("getDataThresholdResult:\n" + result);
@@ -393,7 +393,7 @@
     function clearThre() {
         $("#thrTipModal").modal("hide");
         XmlAjax({
-            url:"/network.html",
+            url:"/network",
             data:{"clear_flowrate":1},
             success:function (result) {
                 console.log("ClearThreshold_Result:\n" + result);
@@ -420,7 +420,7 @@
             dataDate = 1;
         }
         XmlAjax({
-            url: "/network.html",
+            url: "/api/set_data_threshold",
             data: {"set_data_threshold": JSON.stringify({"status":flag,"thresholdValue":planData,"resetDay":dataDate})},
             success: function (result) {
                 console.log("setDataThresholdResult:\n" + result);

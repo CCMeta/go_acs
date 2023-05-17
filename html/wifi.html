@@ -368,7 +368,7 @@
     $("#wifiModal").on("hide.bs.modal", function () {getWifiInfo();})
     function getWifiInfo() {
         XmlAjax({
-            url: "/wifi.html",
+            url: "/api/get_wifi_settings",
             data: {"get_wifi_settings":0},
             success: function (result) {
                 console.log("wifiResult:" + result);
@@ -412,7 +412,7 @@
                 // let apIso = $iso.prop("checked") ? 1 : 0;
                 let wifiStatus = $wifiSwitch.prop("checked") ? 1 : 0;
                 XmlAjax({
-                    url: "/wifi.html",
+                    url: "/api/save_wifi_settings",
                     data:{"save_wifi_settings":JSON.stringify({
                             "status": wifiStatus,
                             "hideSSID":hideSSID,"SSIDName":$ssidName.val(),"bandwidthMode":$netMode.attr("data-value"),"channel":$channel.attr("data-value"),
@@ -442,7 +442,7 @@
         let button = $(".open"), apIso;
         if (button.length == 0) {apIso = 1;} else {apIso = 0;}
         XmlAjax({
-            url: "/wifi.html",
+            url: "/api/set_ap_isolation",
             data: {"set_ap_isolation": apIso},
             success: function (result) {
                 console.log("apisolationResult:\n" + result);

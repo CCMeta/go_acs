@@ -63,7 +63,7 @@ function addOrUpdateAPN() {
             userName = $userName.val(), pwd = $password.val(), apnStatus = $apnSwitch.prop("checked"), dns = $apnDNS.val(), netType = $apnNetType.attr("data-value"), index;
         if(apnFlag === 0) {index = -1;} else {index=updateIndex;}
         XmlAjax({
-            url: "/advance_network.html",
+            url: "/api/save_apn",
             data:{"save_apn" :
                     JSON.stringify({"sim_index":0,"apn_index":index,"apn_selected":apnStatus,"apn_name":apnName, "apn_user_name":userName, "apn_passwd":pwd,"apn_access_point":point,
                         "apn_gateway":gateWay, "apn_port":port,"apn_homepage":homepage,"apn_dns":dns,"apn_auth_type":authType,"apn_ip_type":ipType,"apn_network_type":netType})
@@ -83,7 +83,7 @@ function addOrUpdateAPN() {
 //获取APN配置列表
 function getAPNList() {
     XmlAjax({
-        url: "/advance_network.html",
+        url: "/api/get_apn_list",
         data: {"get_apn_list": 0},
         success: function (result) {
             console.log("getAPNResult:" + result);
@@ -127,7 +127,7 @@ let delAPNIndex, delAPNDom;
 function delAPN(obj) {delAPNIndex = $(obj).data("index");delAPNDom=$(obj).parent()}
 function deleteAPN() {
     XmlAjax({
-        url: "/advance_network.html",
+        url: "/api/del_apn",
         data: {"del_apn":JSON.stringify({"sim_index": 0,"apn_index": delAPNIndex})},
         success: function (result) {getAPNList();toastr.success($("#ad-tip5").html());$("#delAPNModal").modal("hide");},
         error: function () {toastr.error($("#ad-tip2").html());}
@@ -149,7 +149,7 @@ $("#startDiag").on("click", function () {
             } else {
                 timeout = interval;
                 XmlAjax({
-                    url: "/advance_network.html",
+                    url: "/api/start_diagnostics",
                     data:{"start_diagnostics" :JSON.stringify({"diagnosticStatus":1,"ip_address":$("#targetIP").val(),"interval":interval,"count":count})},
                     success: function (result) {
                         console.log("StartDiagResult:" + result);
@@ -171,7 +171,7 @@ $("#startDiag").on("click", function () {
 //停止诊断模式
 $("#stopDiag").on("click", function () {
     XmlAjax({
-        url: "/advance_network.html",
+        url: "/api/stop_diagnostics",
         data:{"stop_diagnostics":0},
         success: function (result) {
             console.log("stopDiagResult:" + result);
@@ -191,7 +191,7 @@ $("#stopDiag").on("click", function () {
 //获取诊断结果
 function GetDiagResult(){
     XmlAjax({
-        url: "/advance_network.html",
+        url: "/api/get_diagnostics_result",
         data:{"get_diagnostics_result":1},
         success: function (result) {
             console.log("getDiagResult:" + result);
@@ -221,7 +221,7 @@ function RefreshDiagResult() {$("#diagResult").val("");GetDiagResult();}
 let simStatus = 1;
 function GetNetwork(){
     XmlAjax({
-        url: "/security.html",
+        url: "/api/network_info",
         data: {"network_info": 0},
         success: function(result) {
             console.log("networkResult:" + result);

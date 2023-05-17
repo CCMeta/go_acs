@@ -516,7 +516,7 @@
     let simStatus = 1;
     function GetNetwork(){
         XmlAjax({
-            url: "/security.html",
+            url: "/api/network_info",
             data: {"network_info": 0},
             success: function(result) {
                 console.log("networkResult:" + result);
@@ -539,7 +539,7 @@
     //获取短信列表
     function getSMSList(index){
         XmlAjax({
-            url: "/message.html",
+            url: "/api/message_list",
             data: {"message_list": index},
             success: function (result) {
                 console.log("smsListResult:" + result);
@@ -630,7 +630,7 @@
     //获取sms设置信息
     function getSMSSettings() {
         XmlAjax({
-            url: "/message.html",
+            url: "/api/get_message_setting",
             data: {"get_message_setting":1},
             success: function (result) {
                 console.log("smsSetResult:" + result);
@@ -645,7 +645,7 @@
     function setSMSSettings() {
         let status = $reportSwitch.prop("checked") ? "1" : "0";
         XmlAjax({
-            url: "/message.html",
+            url: "/api/set_message_setting",
             data: {"set_message_setting": JSON.stringify({"statusReport":status,"storage":$storageSwitch.attr("data-value")})},
             success: function (result) {
                 console.log("SMSSetResult:" + result);
@@ -667,7 +667,7 @@
         $("#viewContent").val("");
         $("#viewDate").val("");
         XmlAjax({
-            url: "/message.html",
+            url: "/api/message_detail",
             data: {"message_detail" : $(obj).data("index")},
             success: function (result) {
                 console.log("showSMSResult:" + result);
@@ -731,7 +731,7 @@
         } else {
             $("#sendTipModal").modal("show");
             XmlAjax({
-                url: "/message.html",
+                url: "/api/send_message",
                 data: {"send_message": JSON.stringify({"dest_addr":$inputContact.val(),"content":unicode2String($inputContent.val())})},
                 success: function (result) {
                     console.log("sendSMSResult:" + result);
@@ -759,7 +759,7 @@
         $("#delSMSModal").modal("hide");
         $("#delTipModal").modal("show");
         XmlAjax({
-            url: "/message.html",
+            url: "/api/delete_message",
             data: {"delete_message": delIndex},
             success: function (result) {
                 console.log("DelSMSResult:" + result);
@@ -787,7 +787,7 @@
         } else {
             $("#ussdSendTipModal").modal("show");
             XmlAjax({
-                url: "/message.html",
+                url: "/api/operate_ussd",
                 data: {"operate_ussd":  JSON.stringify({"ussdCode": ussd})},
                 success: function (result) {
                     console.log("OperatorUSSDResult:" + result);
@@ -820,7 +820,7 @@
     //释放请求
     function releaseUSSD() {
         XmlAjax({
-            url: "/message.html",
+            url: "/api/release_ussd",
             data: {"release_ussd":  1},
             success: function (result) {
                 console.log("ReleaseUSSDResult:" + result);
@@ -830,7 +830,7 @@
     //回复USSD请求
     function ussdReply() {
         XmlAjax({
-            url: "/message.html",
+            url: "/api/operate_ussd",
             data: {"operate_ussd":  JSON.stringify({"ussdCode": $("#ussdReply").val(), "operation": 1})},
             success: function (result) {
                 // $("#ussdSendTipModal").modal("hide");

@@ -290,7 +290,7 @@
     function getLanguage() {
         // $("#loadModal").modal('show');
         XmlAjax({
-            url: "/login.html",
+            url: "/api/get_web_language",
             data: {"get_web_language": 1},
             success: function (result) {
                 console.log("getLanguageResult:" + result);
@@ -329,8 +329,8 @@
     //add simLock function by luolihua 20220520 start
     function getSimLock() {
         XmlAjax({
-            url: "/login.html",
-            data: {"get_simlock_status": 1},
+            url: "/api/get_simlock_status",
+            data: {"": 1},
             success: function (result) {
                 console.log("getSimLockResult:" + result);
                 let data = JSON.parse(result);
@@ -363,7 +363,7 @@
             $("#simLockTip").html($("#lo-tip3").html());
         } else {
             XmlAjax({
-                url: "/login.html",
+                url: "/api/unlock_simlock",
                 data: {"unlock_simlock": lockpwd},
                 success: function (result) {
                     console.log("unlockSimLockResult:" + result);
@@ -388,7 +388,7 @@
     function getPin() {
         $("#simLockModal").modal("hide");
         XmlAjax({
-            url: "/login.html",
+            url: "/api/get_pin_setting",
             data: {"get_pin_setting":"1"},
             success:function (result) {
                 console.log("getPINSetResult:" + result);
@@ -412,7 +412,7 @@
                 } else {
                     //再次获取语言
                     XmlAjax({
-                        url: "/login.html",
+                        url: "/api/get_web_language",
                         data: {"get_web_language": 1},
                         success: function (result) {
                             console.log("getLanguageResult:" + result);
@@ -453,7 +453,7 @@
                 $("#setTipModal").modal("show");
                 //先输入PIN码解锁，然后设置PIN状态
                 XmlAjax({
-                    url:"/login.html",
+                    url:"/login",
                     data:{"operate_pin": JSON.stringify({"pinCode":pin})},
                     success:function (result) {
                         console.log("PINCheckResult:" + result);
@@ -475,7 +475,7 @@
     }
     function OperatePin() {
         XmlAjax({
-            url: "/login.html",
+            url: "/api/get_pin_setting",
             data: {"get_pin_setting":"1"},
             success:function (result) {
                 console.log("getPINSetResult:" + result);
@@ -494,7 +494,7 @@
                         $("#PUKModal").modal("show");
                     } else {
                         XmlAjax({
-                            url:"/login.html",
+                            url:"/login",
                             data:{"operate_pin": JSON.stringify({"pinEnabled":pinSwitch,"pinCode":pin})},
                             success:function (result) {
                                 console.log("PINCheckResult:" + result);
@@ -520,7 +520,7 @@
         else {
             //对密码进行Base64编码 llh 20220701
             XmlAjax({
-                url:"/login.html",
+                url:"/login",
                 data:{"web_login": JSON.stringify({"passwd": window.btoa(pwd)})},
                 success: function (result) {
                     console.log("loginResult" + result);

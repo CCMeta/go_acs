@@ -76,7 +76,7 @@ function openMobileNetwork() {GetNetworkSpeed();GetNetwork();getThr();}
 function mobileCheck() {if(simStatus===1){$MobileModal.modal("show");} else {$("#simTipModal").modal("show");}}
 function GetNetwork(){
     XmlAjax({
-        url: "/network.html",
+        url: "/api/network_info",
         data: {"network_info": 0},
         success: function(result) {
             console.log("networkResult:" + result);
@@ -146,7 +146,7 @@ function ThreCal(speed) {
 let  $dataSwitch = $('#data_switch'), $roamSwitch = $('#roam_switch'), $netSelect = $("#netSelect");
 function GetNetworkSettings() {
     XmlAjax({
-        url: "/network.html",
+        url: "/api/network_setting",
         data: {"network_setting": 0},
         success: function (result) {
             console.log("network_setting:" + result);
@@ -179,7 +179,7 @@ function setNetwork() {
     } else {
         //先停止搜索，避免出错
         XmlAjax({
-            url: "/network.html",
+            url: "/api/abort_search_network",
             data: {"abort_search_network": "1"},
             success: function (result) {
                 console.log("StopSearchNetworkResult:\n" + result);
@@ -201,7 +201,7 @@ function setNetwork() {
 function setOtherNetwork() {
     //设置其他
     XmlAjax({
-        url: "/network.html",
+        url: "/api/set_network_config",
         data: {"set_network_config": JSON.stringify({"gprsStatus":$dataSwitch.prop("checked")?1:0,"roamingStatus":$roamSwitch.prop("checked")?1:0,"networkMode":$netSelect.attr("data-value")})},
         success: function (result) {
             console.log("network_setting:" + result);
@@ -244,7 +244,7 @@ function GetConnectDevice() {
     deviceList = [];
     deviceListGroup = [];
     XmlAjax({
-        url: "/network.html",
+        url: "/api/connected_devices",
         data: {"connected_devices": 0},
         success: function (result) {
             console.log("connected_device_Result:\n" + result);
@@ -302,7 +302,7 @@ function changePageDevice(page) {
 //获取DHCP信息
 function GetDHCP() {
     XmlAjax({
-        url: "/network.html",
+        url: "/api/get_dhcp_setting",
         data: {"get_dhcp_setting": 0},
         success: function (result) {
             console.log("dhcp_Result:\n" + result);
@@ -340,7 +340,7 @@ function setDHCP() {
             window.location.href = "http://" + ipAddr;
         }, 7000);
         XmlAjax({
-            url: "/network.html",
+            url: "/api/save_dhcp",
             data: {"save_dhcp":JSON.stringify({"ipAddr": ipAddr,"startIP": start,"endIP": end,"gateway":ipAddr,"dhcpStatus":1,"leaseTime":dhcp_select,"reboot":1})},
             success: function(result) {console.log("setDHCPResult:" + result);},
             error: function () {toastr.error($("#net-tip2").html());}
@@ -359,7 +359,7 @@ $("#control").on("click", function () {
 //获取阈值
 function getThr() {
     XmlAjax({
-        url:"/network.html",
+        url:"/network",
         data:{"flowrate_record":1},
         success:function (result) {
             console.log("getThreshold_Result:\n" + result);
@@ -382,7 +382,7 @@ function getThr() {
 //清空阈值
 function clearThre() {
     XmlAjax({
-        url:"/network.html",
+        url:"/network",
         data:{"clear_flowrate":1},
         success:function (result) {
             console.log("ClearThreshold_Result:\n" + result);
@@ -422,7 +422,7 @@ function addZero(n) {
 let t2, dataTimeValue;
 function getDataThreshold() {
     XmlAjax({
-        url: "/network.html",
+        url: "/api/get_data_threshold",
         data: {"get_data_threshold" : 1},
         success: function (result) {
             console.log("getDataThresholdResult:\n" + result);
@@ -479,7 +479,7 @@ function SetThreshold() {
         dataDate = 1;
     }
     XmlAjax({
-        url: "/network.html",
+        url: "/api/set_data_threshold",
         data: {"set_data_threshold": JSON.stringify({"status":flag,"thresholdValue":planData,"resetDay":dataDate})},
         success: function (result) {
             console.log("setDataThresholdResult:\n" + result);
@@ -503,7 +503,7 @@ function SetThreshold() {
 let mcc, mnc, refreshFlag = false, networkType;
 function getConnectionMode() {
     XmlAjax({
-        url: "/network.html",
+        url: "/api/get_connection_mode",
         data: {"get_connection_mode": "1"},
         success: function (result) {
             console.log("getConnectionModeResult:\n" + result);
@@ -540,7 +540,7 @@ function startSearchNetwork() {
     $(".connectionRefresh").css("visibility", "hidden");
     $(".connectionBtn").css("visibility", "hidden");
     XmlAjax({
-        url: "/network.html",
+        url: "/api/start_search_network",
         data: {"start_search_network": "1"},
         success: function (result) {
             console.log("searchNetworkResult:\n" + result);
@@ -566,7 +566,7 @@ function startSearchNetwork() {
 //取消搜索网络
 function stopSearchNetwork() {
     XmlAjax({
-        url: "/network.html",
+        url: "/api/abort_search_network",
         data: {"abort_search_network": "1"},
         success: function (result) {
             console.log("StopSearchNetworkResult:\n" + result);
@@ -584,7 +584,7 @@ let ListGroup = [], page = 0, maxPage = 0;
 function getNetworkList() {
     ListGroup = [];
     XmlAjax({
-        url: "/network.html",
+        url: "/api/get_network_list",
         data: {"get_network_list": "1"},
         success: function (result) {
             console.log("getNetworkListResult:\n" + result);
@@ -659,7 +659,7 @@ function setNetworkManual() {
     let mode = $("#connectSelect").val() === "Auto" ? 1 : 0;
     let network = $(".buttonSwitch").data("index");
     XmlAjax({
-        url: "/network.html",
+        url: "/api/select_connection_mode",
         data: {"select_connection_mode": JSON.stringify({"select_mode":mode,"plmnIndex":network})},
         success: function (result) {
             console.log("setConnectionModeResult:\n" + result);

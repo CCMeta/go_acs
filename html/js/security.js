@@ -40,7 +40,7 @@ $("#firewallSwitch,#filterSwitch,#pingSwitch").on("click", function () {
 // //获取protection信息
 $("#protectModal").on("show.bs.modal", function () {
     XmlAjax({
-        url: "/security.html",
+        url: "/api/get_protection_setting",
         data:{"get_protection_setting":1},
         success: function (result) {
             console.log("getProtectResult:" + result);
@@ -66,7 +66,7 @@ function saveProtect() {
     let pinS = $ping.prop("checked") ? 1 : 0, ipS = $IPFilter.prop("checked") ? 1 : 0, fireS = $firewall.prop("checked") ? 1 : 0;
     if(fireS===0) {pinS = 0; ipS = 0;}
     XmlAjax({
-        url: "/security.html",
+        url: "/api/save_protection_setting",
         data: {"save_protection_setting":JSON.stringify({
                 "pingDeactivation":pinS,
                 "IPFilterSwitch":ipS,
@@ -98,7 +98,7 @@ $filterType.on("change", function () {
 })
 function GetIPFilter() {
     XmlAjax({
-        url: "/security.html",
+        url: "/api/get_ip_filter",
         data: {"get_ip_filter":1},
         success: function (result) {
             console.log("getIPFilterResult:" + result);
@@ -141,7 +141,7 @@ function addIPFilter() {
         toastr.error($("#sec-tip4").html());
     } else {
         XmlAjax({
-            url: "/security.html",
+            url: "/api/save_ip_filter",
             data: {"save_ip_filter": JSON.stringify({
                     "operate":"add","lan_ip":ipAddress,"lan_port":lanPort,
                     "wan_ip":wanAddress, "wan_port":wanPort,"protocol":filterType
@@ -176,7 +176,7 @@ function delIPFilter() {
         toastr.warning($("#sec-tip14").html());
     } else {
         XmlAjax({
-            url: "/security.html",
+            url: "/api/save_ip_filter",
             data: {"save_ip_filter": JSON.stringify({"operate": "del", "index": index})},
             success:function (result) {
                 console.log("delIPFilterResult:" + result);
@@ -212,7 +212,7 @@ function getPINSetting() {
     $("#pinInput").val("");
     $("#pinTip").html('')
     XmlAjax({
-        url: "/security.html",
+        url: "/api/get_pin_setting",
         data: {"get_pin_setting": 1},
         success: function (result) {
             console.log("getPINResult:" + result);
@@ -245,7 +245,7 @@ function savePIN() {
         toastr.warning($("#sec-tip7").html());
     } else {
         XmlAjax({
-            url: "/security.html",
+            url: "/api/operate_pin",
             data: {"operate_pin" :JSON.stringify({"pinEnabled": $("#pin_switch").prop("checked") ? 1 : 0,"pinCode": code})},
             success: function (result) {
                 console.log("setPINResult:" + result);
@@ -297,7 +297,7 @@ function changePINCode() {
     else if (password.length < 4 || password.length > 8) {toastr.error($("#sec-tip7").html());}
     else {
         XmlAjax({
-            url: "/security.html",
+            url: "/api/change_pin",
             data: {"change_pin": JSON.stringify({"pinOldCode": currentP, "pinNewCode": password})},
             success: function (result) {
                 console.log("ChangePINCodeResult:" + result);
@@ -331,7 +331,7 @@ function changePINCode() {
 let simStatus = 1;
 function GetNetwork(){
     XmlAjax({
-        url: "/security.html",
+        url: "/api/network_info",
         data: {"network_info": 0},
         success: function(result) {
             console.log("networkResult:" + result);
@@ -346,7 +346,7 @@ function simCheck(){if(simStatus===1){$("#simPinModal").modal("show");} else {$(
 //获取黑名单列表
 function getmacList() {
     XmlAjax({
-        url: "/system.html",
+        url: "/api/get_black_list",
         data: {"get_black_list": 1},
         success: function (result) {
             console.log("getmacResult:" + result);
@@ -390,7 +390,7 @@ let delmacIndex;
 function delmac(obj) {delmacIndex = $(obj).data("index");}
 function deletemac() {
     XmlAjax({
-        url: "/security.html",
+        url: "/api/blk_rm",
         data: {"blk_rm":delmacIndex},
         success: function (result) {
             getmacList();
@@ -404,7 +404,7 @@ function deletemac() {
 //获取已经连接的设备
 function GetConnectDevice() {
     XmlAjax({
-        url: "/security.html",
+        url: "/api/connected_devices",
         data: {"connected_devices": 0},
         success: function (result) {
             console.log("connected_device_Result:\n" + result);
@@ -429,7 +429,7 @@ function GetConnectDevice() {
 function addmac(obj) {
     let addmacIndex = $(obj).data("index");
     XmlAjax({
-        url: "/security.html",
+        url: "/api/blk_list",
         data:{"blk_list" :addmacIndex},
         success:function (result) {
             console.log("addmacResult:" + result);

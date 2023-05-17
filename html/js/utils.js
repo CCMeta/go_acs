@@ -322,7 +322,7 @@ $(document).on("click", ".drop-lang-show", function () {
     $(".btn-group-vertical").removeClass("drop-show");
     let text = this.innerText;
     XmlAjax({
-        url: "/main.html",
+        url: "/api/set_web_language",
         data:{"set_web_language": lang_num[text]},
         success: function (result) {
             console.log("setLanguageResult:" + result);
