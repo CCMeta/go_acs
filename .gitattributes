@@ -1,2 +1,2 @@
-*.html text
-*.js text
+*.html -text
+*.js -text
