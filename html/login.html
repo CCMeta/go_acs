@@ -453,7 +453,7 @@
                 $("#setTipModal").modal("show");
                 //先输入PIN码解锁，然后设置PIN状态
                 XmlAjax({
-                    url:"/login",
+                    url:"/api/login",
                     data:{"operate_pin": JSON.stringify({"pinCode":pin})},
                     success:function (result) {
                         console.log("PINCheckResult:" + result);
@@ -494,7 +494,7 @@
                         $("#PUKModal").modal("show");
                     } else {
                         XmlAjax({
-                            url:"/login",
+                            url:"/api/login",
                             data:{"operate_pin": JSON.stringify({"pinEnabled":pinSwitch,"pinCode":pin})},
                             success:function (result) {
                                 console.log("PINCheckResult:" + result);
@@ -520,7 +520,7 @@
         else {
             //对密码进行Base64编码 llh 20220701
             XmlAjax({
-                url:"/login",
+                url:"/api/login",
                 data:{"web_login": JSON.stringify({"passwd": window.btoa(pwd)})},
                 success: function (result) {
                     console.log("loginResult" + result);

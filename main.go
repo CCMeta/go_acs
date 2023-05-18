@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"wm24_api/sql"
 
 	"github.com/kataras/iris/v12"
@@ -78,6 +79,35 @@ func run_action(ctx iris.Context) {
 
 	action := ctx.Params().Get("action")
 	switch action {
+	case `flowrate_record`:
+		total_send := rand.Int31()
+		total_recv := rand.Int31()
+		cur_send := rand.Int31()
+		cur_recv := rand.Int31()
+		// body := fmt.Sprintf(`{	"result": "ok",	"upload": "%v","download": "%v"}`, upload, download)
+		// ctx.WriteString(body)
+		ctx.JSON(iris.Map{
+			"result":     "ok",
+			"total_send": total_send,
+			"total_recv": total_recv,
+			"cur_send":   cur_send,
+			"cur_recv":   cur_recv,
+		})
+	case `navtop_info`:
+		ctx.JSON(iris.Map{
+			"result":            "ok",
+			"batteryRemain":     "46",
+			"tobeReadSMS":       "1",
+			"language":          "en",
+			"totalNumSMS":       "14",
+			"isSMSFull":         "0",
+			"total_send":        "3450",
+			"total_recv":        "3207",
+			"cur_send":          "8029",
+			"cur_recv":          "5014",
+			"threshold_percent": "90",
+			"apStatus":          "1",
+		})
 	case `network_info`:
 		networkName, _1 := exec.Command("/system/bin/getprop", "gsm.sim.operator.alpha").Output()
 		networkType, _2 := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
@@ -96,15 +126,19 @@ func run_action(ctx iris.Context) {
 			"result":         "ok",
 			"networkName":    string(networkName),
 			"networkType":    string(networkType),
-			"simStatus":      string(simStatus),
+			"simStatus":      strings.Contains(string(simStatus), "LOADED"),
 			"gprsStatus":     string(gprsStatus),
-			"signalStrength": string(signalStrength),
+			"signalStrength": strings.Split(string(signalStrength), ",")[0],
 		})
+
 	case `network_speed`:
 		upload := rand.Int31()
 		download := rand.Int31()
-		body := fmt.Sprintf(`{	"result": "ok",	"upload": "%v","download": "%v"}`, upload, download)
-		ctx.WriteString(body)
+		ctx.JSON(iris.Map{
+			"result":   "ok",
+			"upload":   upload,
+			"download": download,
+		})
 	case `getprop`:
 		body, err := exec.Command("/system/bin/getprop").Output()
 		if err != nil {

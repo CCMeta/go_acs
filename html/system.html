@@ -542,7 +542,7 @@
     //获取自动升级开关
     function getAutoUpdate() {
         XmlAjax({
-            url:"/system",
+            url:"/api/system",
             data:{"get_auto_update":1},
             success:function (result) {
                 console.log("getAutoUpdateResult:\n" + result);
@@ -555,7 +555,7 @@
     $autoSwitch.on("change", function () {saveAutoUpdate();})
     function saveAutoUpdate() {
         XmlAjax({
-            url:"/system",
+            url:"/api/system",
             data:{"set_auto_update": $autoSwitch.prop("checked") ? 1:0},
             success:function (result) {
                 console.log("SetAutoUpdateResult:\n" + result);
@@ -567,7 +567,7 @@
     //获取fota信息
     function getFotaInfo() {
         XmlAjax({
-            url:"/system",
+            url:"/api/system",
             data:{"get_fota_info": 1},
             success:function (result) {
                 console.log("getFotaInfoResult:\n" + result);
@@ -581,7 +581,7 @@
     function checkForUpdate() {
         $("#checkTip").css("visibility","visible");
         XmlAjax({
-            url:"/system",
+            url:"/api/system",
             data:{"check_version":1},
             success:function (result) {
                 console.log("CheckVersionResult:\n" + result);
@@ -608,7 +608,7 @@
         $("#checkUpdateModal").modal("hide");
         toastr.info($("#sys-tip5").html());
         XmlAjax({
-            url:"/system",
+            url:"/api/system",
             data:{"check_version":2},
             success:function (result) {
                 console.log("UpdateNewVersionResult:" +result);

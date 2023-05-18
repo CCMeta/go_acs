@@ -393,7 +393,7 @@
     function clearThre() {
         $("#thrTipModal").modal("hide");
         XmlAjax({
-            url:"/network",
+            url:"/api/network",
             data:{"clear_flowrate":1},
             success:function (result) {
                 console.log("ClearThreshold_Result:\n" + result);

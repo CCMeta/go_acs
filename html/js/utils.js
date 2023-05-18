@@ -396,7 +396,7 @@ $(".modal-header").on("click", function (){
 //获取电量
 function getBattery(postURL) {
     XmlAjax({
-        url: postURL,
+        url: "/api/navtop_info",
         data: {"navtop_info": 0},
         success: function (result) {
             console.log("navtopResult:" + result);
