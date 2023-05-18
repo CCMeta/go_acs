@@ -16,6 +16,7 @@ import (
 
 func main() {
 
+	// init app and load static resource
 	app := iris.Default()
 	tmpl := iris.HTML("./", ".html")
 	app.RegisterView(tmpl)
@@ -26,6 +27,7 @@ func main() {
 
 	/*************************Custom Routers****************************/
 
+	// for data api files
 	api := app.Party("/api")
 	{
 		api.Use(iris.Compression)
@@ -79,6 +81,21 @@ func run_action(ctx iris.Context) {
 
 	action := ctx.Params().Get("action")
 	switch action {
+	case `connected_devices`:
+		device := iris.Map{
+			"index":    "0",
+			"hostName": "z",
+			"ip_addr":  "192.168.1.100",
+			"mac_addr": "d2:36:db:4f:f6:8a",
+			"usbShare": "0",
+		}
+		devices := [...]iris.Map{device, device, device, device}
+		ctx.JSON(iris.Map{
+			"result":   "ok",
+			"totalNum": len(devices),
+			"devices":  devices,
+		})
+
 	case `flowrate_record`:
 		total_send := rand.Int31()
 		total_recv := rand.Int31()
