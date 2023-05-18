@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"wm24_api/sql"
@@ -15,6 +16,9 @@ import (
 func main() {
 
 	app := iris.Default()
+	tmpl := iris.HTML("./", ".html")
+	app.RegisterView(tmpl)
+	app.HandleDir("./", http.Dir("./"))
 	// db, secret := init_db()
 	// subRouter := api.Router(db, secret)
 	// app.PartyFunc("/", subRouter)
@@ -26,6 +30,17 @@ func main() {
 		api.Use(iris.Compression)
 		api.Get("/{action}", run_action)
 		api.Post("/{action}", run_action)
+	}
+
+	// for static html files
+	html := app.Party("/")
+	{
+		html.Use(iris.Compression)
+		html.Get("/{page}", func(ctx iris.Context) {
+			page := ctx.Params().Get("page")
+			ctx.View(page)
+		})
+		// html.Post("/{action}", run_action)
 	}
 
 	/*************************Starting Server****************************/
@@ -70,18 +85,21 @@ func run_action(ctx iris.Context) {
 		gprsStatus, _4 := exec.Command("settings", "get", "global", "mobile_data").Output()
 		signalStrength, _5 := exec.Command("/system/bin/getprop", "vendor.ril.nw.signalstrength.lte.1").Output()
 		if _1 != nil || _2 != nil || _3 != nil || _4 != nil || _5 != nil {
-			// ctx.StopWithError(500, _1)
-			// ctx.StopWithError(500, _2)
-			// ctx.StopWithError(500, _3)
+			ctx.StopWithError(500, _1)
+			ctx.StopWithError(500, _2)
+			ctx.StopWithError(500, _3)
 			ctx.StopWithError(500, _4)
-			// ctx.StopWithError(500, _5)
+			ctx.StopWithError(500, _5)
 			return
 		}
-		ctx.JSON(iris.Map{"networkName": string(networkName),
+		ctx.JSON(iris.Map{
+			"result":         "ok",
+			"networkName":    string(networkName),
 			"networkType":    string(networkType),
 			"simStatus":      string(simStatus),
 			"gprsStatus":     string(gprsStatus),
-			"signalStrength": string(signalStrength)})
+			"signalStrength": string(signalStrength),
+		})
 	case `network_speed`:
 		upload := rand.Int31()
 		download := rand.Int31()

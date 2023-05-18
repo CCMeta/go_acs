@@ -82,7 +82,7 @@ function GetNetwork(){
             console.log("networkResult:" + result);
             let data = JSON.parse(result);
             if(data.result === "ok") {
-                $('#operatorName').html(string2Unicode(data.networkName));
+                $('#operatorName').html(data.networkName);
                 $('#lte').html(data.networkType);
                 if(data.simStatus !== "0") {$('#simStatus').html("Off");$('#simStatusSvg').css("fill", "grey");} else {$('#simStatus').html("On");$('#simStatusSvg').css("fill", "#80FF00");}
                 switch (data.signalStrength) {
