@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"wm24_api/sql"
 
@@ -81,6 +82,110 @@ func run_action(ctx iris.Context) {
 
 	action := ctx.Params().Get("action")
 	switch action {
+	case `get_pin_setting`:
+		pinRemain, err1 := exec.Command("/system/bin/getprop", "vendor.gsm.sim.retry.pin1").Output()
+		pinEnabled, err2 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
+		pinStatus, err3 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
+		_pinRemain, _ := strconv.Atoi(string(pinRemain[:len(pinRemain)-1]))
+		_pinEnabled, _ := strconv.Atoi(string(pinEnabled[:len(pinEnabled)-1]))
+		_pinStatus, _ := strconv.Atoi(string(pinStatus[:len(pinStatus)-1]))
+		if err3 != nil || err2 != nil || err1 != nil {
+			ctx.StopWithError(500, err3)
+			ctx.StopWithError(500, err2)
+			ctx.StopWithError(500, err1)
+			return
+		}
+		ctx.JSON(iris.Map{
+			"result":     "ok",
+			"pinRemain":  _pinRemain,
+			"pinEnabled": _pinEnabled,
+			"pinStatus":  _pinStatus,
+		})
+	case `get_wifi_settings`:
+		/*
+		   *
+		   <WifiConfigStoreData>
+		   <SoftAp>
+		   	<string name="WifiSsid">&quot;Wm24&quot;</string>
+		   	<boolean name="HiddenSSID" value="false" />
+		   	<int name="SecurityType" value="2" />
+		   	<string name="Passphrase">88888888</string>
+		   	<BandChannelMap>
+		   		<BandChannel>
+		   			<int name="Band" value="1" />
+		   			<int name="Channel" value="0" />
+		   		</BandChannel>
+		   	</BandChannelMap>
+		   	<string name="PersistentRandomizedMacAddress">8a:5b:e0:9f:35:e5</string>
+		   </SoftAp>
+		   </WifiConfigStoreData>
+		*/
+
+		type XmlItems struct {
+			WifiConfigStoreData xml.Name `xml:"WifiConfigStoreData"`
+			SoftAp              struct {
+				XMLName    xml.Name `xml:"SoftAp"`
+				AP_Strings []struct {
+					NAME  string `xml:"name,attr"`
+					VALUE string `xml:",chardata"`
+				} `xml:"string"`
+				AP_Ints []struct {
+					NAME  string `xml:"name,attr"`
+					VALUE string `xml:",chardata"`
+				} `xml:"int"`
+				AP_BOOLS []struct {
+					NAME  string `xml:"name,attr"`
+					VALUE string `xml:",chardata"`
+				} `xml:"boolean"`
+				AP_BandChannelMap struct {
+					XMLName     xml.Name `xml:"BandChannelMap"`
+					BandChannel struct {
+						XMLName          xml.Name `xml:"BandChannel"`
+						BandChannel_Ints []struct {
+							NAME  string `xml:"name,attr"`
+							VALUE string `xml:",chardata"`
+						} `xml:"int"`
+					} `xml:"BandChannel"`
+				} `xml:"BandChannelMap"`
+			} `xml:"SoftAp"`
+		}
+
+		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
+		if err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		fuck := new(XmlItems)
+
+		if err = xml.Unmarshal(wifi_text, fuck); err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		hideSSID := fuck.SoftAp.AP_BOOLS[0].VALUE
+		security := fuck.SoftAp.AP_Ints[0].VALUE
+		SSIDName := fuck.SoftAp.AP_Strings[0].VALUE
+		password := fuck.SoftAp.AP_Strings[1].VALUE
+		bandwidthMode := fuck.SoftAp.AP_BandChannelMap.BandChannel.BandChannel_Ints[0].VALUE
+		channel := fuck.SoftAp.AP_BandChannelMap.BandChannel.BandChannel_Ints[1].VALUE
+		ctx.JSON(iris.Map{
+			"result":        "ok",
+			"status":        1,
+			"apIsolation":   0,
+			"hideSSID":      hideSSID,
+			"SSIDName":      SSIDName,
+			"bandwidthMode": bandwidthMode,
+			"channel":       channel,
+			"security":      security,
+			"password":      password,
+			// "autoSleep":     0,
+		})
+	case `ip`:
+		clients, err := exec.Command("sh", "-c", "ip neigh | grep ap0 | grep REACHABLE").Output()
+		if err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		ctx.WriteString(string(clients))
 	case `connected_devices`:
 		device := iris.Map{
 			"index":    "0",
@@ -172,7 +277,8 @@ func run_action(ctx iris.Context) {
 
 type XmlItems struct {
 	XMLName xml.Name `xml:"Envelope"`
-	Header  struct {
+
+	Header struct {
 		XMLName xml.Name `xml:"Header"`
 		// Autocomplete xml.Attr `xml:"autocomplete,attr"`
 		// Valid        xml.Attr `xml:"valid,attr"`
@@ -184,6 +290,7 @@ type XmlItems struct {
 		// 	Content  string   `xml:",innerxml"`
 		// } `xml:"text"`
 	} `xml:"Header"`
+
 	Body struct {
 		XMLName xml.Name `xml:"Body"`
 		Inform  struct {
