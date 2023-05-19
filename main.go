@@ -78,10 +78,101 @@ func getenv(key string, def string) string {
 	return v
 }
 
+/*
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<WifiConfigStoreData>
+<int name="Version" value="3" />
+<SoftAp>
+<string name="WifiSsid">&quot;Wm24&quot;</string>
+<boolean name="HiddenSSID" value="false" />
+<int name="SecurityType" value="2" />
+<string name="Passphrase">88888888</string>
+<int name="MaxNumberOfClients" value="0" />
+<boolean name="ClientControlByUser" value="false" />
+<boolean name="AutoShutdownEnabled" value="true" />
+<long name="ShutdownTimeoutMillis" value="-1" />
+<BlockedClientList />
+<AllowedClientList />
+<boolean name="BridgedModeOpportunisticShutdownEnabled" value="true" />
+<int name="MacRandomizationSetting" value="2" />
+<BandChannelMap>
+<BandChannel>
+<int name="Band" value="1" />
+<int name="Channel" value="0" />
+</BandChannel>
+</BandChannelMap>
+<boolean name="80211axEnabled" value="true" />
+<boolean name="UserConfiguration" value="true" />
+<long name="BridgedModeOpportunisticShutdownTimeoutMillis" value="-1" />
+<VendorElements />
+<boolean name="80211beEnabled" value="true" />
+<string name="PersistentRandomizedMacAddress">8a:5b:e0:9f:35:e5</string>
+</SoftAp>
+</WifiConfigStoreData>
+*/
+type WiFiXML struct {
+	WifiConfigStoreData xml.Name `xml:"WifiConfigStoreData"`
+	SoftAp              struct {
+		XMLName    xml.Name `xml:"SoftAp"`
+		AP_Strings []struct {
+			NAME  string `xml:"name,attr"`
+			VALUE string `xml:",chardata"`
+		} `xml:"string"`
+		AP_Ints []struct {
+			NAME  string `xml:"name,attr"`
+			VALUE string `xml:"value,attr"`
+		} `xml:"int"`
+		AP_BOOLS []struct {
+			NAME  string `xml:"name,attr"`
+			VALUE string `xml:"value,attr"`
+		} `xml:"boolean"`
+		AP_BandChannelMap struct {
+			XMLName     xml.Name `xml:"BandChannelMap"`
+			BandChannel struct {
+				XMLName          xml.Name `xml:"BandChannel"`
+				BandChannel_Ints []struct {
+					NAME  string `xml:"name,attr"`
+					VALUE string `xml:"value,attr"`
+				} `xml:"int"`
+			} `xml:"BandChannel"`
+		} `xml:"BandChannelMap"`
+	} `xml:"SoftAp"`
+}
+
 func run_action(ctx iris.Context) {
 
 	action := ctx.Params().Get("action")
 	switch action {
+
+	case `get_device_info`:
+		firmwarewVersion, _ := exec.Command("/system/bin/getprop", "ro.mediatek.version.release").Output()
+		serialNumber, _ := exec.Command("/system/bin/getprop", "ro.serialno").Output()
+		imei, _ := exec.Command("service", "call", "iphonesubinfo", "1").Output()
+
+		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
+		if err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		wifi_obj := new(WiFiXML)
+		if err = xml.Unmarshal(wifi_text, wifi_obj); err != nil {
+			ctx.StopWithError(500, err)
+			return
+		}
+		mac_addr := wifi_obj.SoftAp.AP_Strings[2].VALUE
+
+		ctx.JSON(iris.Map{
+			"result":           "ok",
+			"serialNumber":     string(serialNumber),
+			"imei":             string(imei),
+			"imsi":             "00000000000000000",
+			"hardwareVersion":  "1.0.0",
+			"softwarewVersion": "随便自定义1_1_1 和WEBUI重复了？",
+			"firmwarewVersion": string(firmwarewVersion),
+			"webUIVersion":     "随便自定义1_1_1",
+			"mac":              mac_addr,
+			"wanIP":            "10.40.86.109",
+		})
 	case `get_pin_setting`:
 		pinRemain, err1 := exec.Command("/system/bin/getprop", "vendor.gsm.sim.retry.pin1").Output()
 		pinEnabled, err2 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
@@ -102,75 +193,28 @@ func run_action(ctx iris.Context) {
 			"pinStatus":  _pinStatus,
 		})
 	case `get_wifi_settings`:
-		/*
-		   *
-		   <WifiConfigStoreData>
-		   <SoftAp>
-		   	<string name="WifiSsid">&quot;Wm24&quot;</string>
-		   	<boolean name="HiddenSSID" value="false" />
-		   	<int name="SecurityType" value="2" />
-		   	<string name="Passphrase">88888888</string>
-		   	<BandChannelMap>
-		   		<BandChannel>
-		   			<int name="Band" value="1" />
-		   			<int name="Channel" value="0" />
-		   		</BandChannel>
-		   	</BandChannelMap>
-		   	<string name="PersistentRandomizedMacAddress">8a:5b:e0:9f:35:e5</string>
-		   </SoftAp>
-		   </WifiConfigStoreData>
-		*/
-
-		type XmlItems struct {
-			WifiConfigStoreData xml.Name `xml:"WifiConfigStoreData"`
-			SoftAp              struct {
-				XMLName    xml.Name `xml:"SoftAp"`
-				AP_Strings []struct {
-					NAME  string `xml:"name,attr"`
-					VALUE string `xml:",chardata"`
-				} `xml:"string"`
-				AP_Ints []struct {
-					NAME  string `xml:"name,attr"`
-					VALUE string `xml:",chardata"`
-				} `xml:"int"`
-				AP_BOOLS []struct {
-					NAME  string `xml:"name,attr"`
-					VALUE string `xml:",chardata"`
-				} `xml:"boolean"`
-				AP_BandChannelMap struct {
-					XMLName     xml.Name `xml:"BandChannelMap"`
-					BandChannel struct {
-						XMLName          xml.Name `xml:"BandChannel"`
-						BandChannel_Ints []struct {
-							NAME  string `xml:"name,attr"`
-							VALUE string `xml:",chardata"`
-						} `xml:"int"`
-					} `xml:"BandChannel"`
-				} `xml:"BandChannelMap"`
-			} `xml:"SoftAp"`
-		}
-
 		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
 		if err != nil {
 			ctx.StopWithError(500, err)
 			return
 		}
-		fuck := new(XmlItems)
-
-		if err = xml.Unmarshal(wifi_text, fuck); err != nil {
+		wifi_obj := new(WiFiXML)
+		if err = xml.Unmarshal(wifi_text, wifi_obj); err != nil {
 			ctx.StopWithError(500, err)
 			return
 		}
-		hideSSID := fuck.SoftAp.AP_BOOLS[0].VALUE
-		security := fuck.SoftAp.AP_Ints[0].VALUE
-		SSIDName := fuck.SoftAp.AP_Strings[0].VALUE
-		password := fuck.SoftAp.AP_Strings[1].VALUE
-		bandwidthMode := fuck.SoftAp.AP_BandChannelMap.BandChannel.BandChannel_Ints[0].VALUE
-		channel := fuck.SoftAp.AP_BandChannelMap.BandChannel.BandChannel_Ints[1].VALUE
+		hideSSID := wifi_obj.SoftAp.AP_BOOLS[0].VALUE
+		security := wifi_obj.SoftAp.AP_Ints[1].VALUE
+		SSIDName := wifi_obj.SoftAp.AP_Strings[0].VALUE
+		mac_addr := wifi_obj.SoftAp.AP_Strings[2].VALUE
+		password := wifi_obj.SoftAp.AP_Strings[1].VALUE
+		bandwidthMode := wifi_obj.SoftAp.AP_BandChannelMap.BandChannel.BandChannel_Ints[0].VALUE
+		channel := wifi_obj.SoftAp.AP_BandChannelMap.BandChannel.BandChannel_Ints[1].VALUE
 		ctx.JSON(iris.Map{
 			"result":        "ok",
 			"status":        1,
 			"apIsolation":   0,
+			"mac_addr":      mac_addr,
 			"hideSSID":      hideSSID,
 			"SSIDName":      SSIDName,
 			"bandwidthMode": bandwidthMode,
@@ -180,7 +224,7 @@ func run_action(ctx iris.Context) {
 			// "autoSleep":     0,
 		})
 	case `ip`:
-		clients, err := exec.Command("sh", "-c", "ip neigh | grep ap0 | grep REACHABLE").Output()
+		clients, err := exec.Command("sh", "-c", "ip -4 neigh | grep ap0 | grep REACHABLE").Output()
 		if err != nil {
 			ctx.StopWithError(500, err)
 			return
