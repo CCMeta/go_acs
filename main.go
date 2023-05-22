@@ -242,14 +242,23 @@ func run_action(ctx iris.Context) {
 		}
 		ctx.WriteString(valFilter(clients))
 	case `connected_devices`:
-		device := iris.Map{
-			"index":    "0",
-			"hostName": "z",
-			"ip_addr":  "192.168.1.100",
-			"mac_addr": "d2:36:db:4f:f6:8a",
-			"usbShare": "0",
+		//ip neigh show dev ap0
+		clients_buf, _ := exec.Command("sh", "-c", "ip -4 neigh show dev wlan0").Output()
+		devices := []iris.Map{}
+		clients_list := strings.Split(valFilter(clients_buf), "\n")
+
+		for i, v := range clients_list {
+			client_map := strings.Split(v, " ")
+			device := iris.Map{
+				"index":    i,
+				"hostName": client_map[2],
+				"ip_addr":  client_map[0],
+				"mac_addr": client_map[2],
+				"usbShare": "0",
+			}
+			devices = append(devices, device)
 		}
-		devices := [...]iris.Map{device, device, device, device}
+
 		ctx.JSON(iris.Map{
 			"result":   "ok",
 			"totalNum": len(devices),
