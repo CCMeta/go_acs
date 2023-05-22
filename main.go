@@ -320,7 +320,7 @@ func run_action(ctx iris.Context) {
 		networkType, _ := exec.Command("sh", "-c", "settings get global preferred_network_mode").Output()
 		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
 		_networkType := ""
-		switch valFilter(networkType) {
+		switch string(networkType) {
 		case "9":
 			_networkType = "0"
 		case "11":
@@ -366,6 +366,16 @@ func run_action(ctx iris.Context) {
 			return
 		}
 		ctx.Write(body)
+	case `restart`:
+		params := PostJsonDecoder(ctx, `restart`)
+		if params["restart"] == "1" {
+			//async
+			go exec.Command("sh", "-c", "sleep 5 && reboot").Output()
+		}
+		ctx.JSON(iris.Map{
+			"result": "ok",
+			"params": params["restart"],
+		})
 	default:
 		ctx.WriteString("REQUEST IS FAILED BY action = " + action)
 	}
@@ -378,6 +388,12 @@ func PostJsonDecoder(ctx iris.Context, action string) map[string]interface{} {
 	var body_buffer []byte
 	body_buffer, _ = ctx.GetBody()
 	values, _ := url.ParseQuery(string(body_buffer))
+	// this is only for int value but not jsons
+	if len(values.Get(action)) < 3 {
+		return iris.Map{
+			action: values.Get(action),
+		}
+	}
 	_ = json.Unmarshal([]byte(values.Get(action)), &temp)
 	return temp
 }

@@ -415,7 +415,7 @@
         $("#updateModal").removeClass("blur");$main.addClass("blur");
     })
     window.onload = function () {
-        if(localStorage.getItem("pin")==="lock"){window.location.href = "login.html";}
+        if(localStorage.getItem("pin")==="lock" && false){window.location.href = "login.html";}
         else {
             getBattery("/system.html");getAutoUpdate();GetNetwork();
             setTimeout(function () {GetDeviceInfo();},500)
