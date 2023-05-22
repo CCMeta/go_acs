@@ -185,6 +185,7 @@ function setNetwork() {
         //选择手动模式，但是未选择网络
         toastr.error($("#net-tip5").html());
     } else {
+        setOtherNetwork();
         //先停止搜索，避免出错
         XmlAjax({
             url: "/api/abort_search_network",
@@ -193,7 +194,6 @@ function setNetwork() {
                 console.log("StopSearchNetworkResult:\n" + result);
                 let data = JSON.parse(result);
                 console.log("Stop search network and set network");
-                setOtherNetwork();
                 setTimeout(function () {
                     if (networkFlag && dataThresholdFlag && connectionFlag) { toastr.success($("#net-tip1").html()); }
                     else {

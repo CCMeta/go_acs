@@ -1,11 +1,13 @@
 package main // Look README.md
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -166,18 +168,18 @@ func run_action(ctx iris.Context) {
 		wanIP := ""
 		if len(wanIP_text) > 1 {
 			wanIP = strings.ReplaceAll(
-				strings.ReplaceAll(string(wanIP_text), "inet addr:", ""),
+				strings.ReplaceAll(valFilter(wanIP_text), "inet addr:", ""),
 				"  Mask:255.0.0.0", "")
 		}
 
 		ctx.JSON(iris.Map{
 			"result":           "ok",
-			"serialNumber":     string(serialNumber),
-			"imei":             string(imei),
+			"serialNumber":     valFilter(serialNumber),
+			"imei":             valFilter(imei),
 			"imsi":             "00000000000000000",
 			"hardwareVersion":  "1.0.0",
 			"softwarewVersion": "随便自定义1_1_1 和WEBUI重复了？",
-			"firmwarewVersion": string(firmwarewVersion),
+			"firmwarewVersion": valFilter(firmwarewVersion),
 			"webUIVersion":     "随便自定义1_1_1",
 			"mac":              mac_addr,
 			"wanIP":            wanIP,
@@ -186,9 +188,9 @@ func run_action(ctx iris.Context) {
 		pinRemain, err1 := exec.Command("/system/bin/getprop", "vendor.gsm.sim.retry.pin1").Output()
 		pinEnabled, err2 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
 		pinStatus, err3 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
-		_pinRemain, _ := strconv.Atoi(string(pinRemain[:len(pinRemain)-1]))
-		_pinEnabled, _ := strconv.Atoi(string(pinEnabled[:len(pinEnabled)-1]))
-		_pinStatus, _ := strconv.Atoi(string(pinStatus[:len(pinStatus)-1]))
+		_pinRemain, _ := strconv.Atoi(valFilter(pinRemain[:len(pinRemain)-1]))
+		_pinEnabled, _ := strconv.Atoi(valFilter(pinEnabled[:len(pinEnabled)-1]))
+		_pinStatus, _ := strconv.Atoi(valFilter(pinStatus[:len(pinStatus)-1]))
 		if err3 != nil || err2 != nil || err1 != nil {
 			ctx.StopWithError(500, err3)
 			ctx.StopWithError(500, err2)
@@ -238,7 +240,7 @@ func run_action(ctx iris.Context) {
 			ctx.StopWithError(500, err)
 			return
 		}
-		ctx.WriteString(string(clients))
+		ctx.WriteString(valFilter(clients))
 	case `connected_devices`:
 		device := iris.Map{
 			"index":    "0",
@@ -260,7 +262,7 @@ func run_action(ctx iris.Context) {
 		cur_send := rand.Int31()
 		cur_recv := rand.Int31()
 		// body := fmt.Sprintf(`{	"result": "ok",	"upload": "%v","download": "%v"}`, upload, download)
-		// ctx.WriteString(body)
+		// ctx.WritevalFilter(body)
 		ctx.JSON(iris.Map{
 			"result":     "ok",
 			"total_send": total_send,
@@ -269,11 +271,14 @@ func run_action(ctx iris.Context) {
 			"cur_recv":   cur_recv,
 		})
 	case `navtop_info`:
+		batteryRemain, _ := exec.Command("sh", "-c", "dumpsys battery get level").Output()
+		apStatus, _ := exec.Command("sh", "-c", "ifconfig ap0 | grep RUNNING").Output()
+
 		ctx.JSON(iris.Map{
 			"result":            "ok",
-			"batteryRemain":     "46",
-			"tobeReadSMS":       "1",
+			"batteryRemain":     valFilter(batteryRemain),
 			"language":          "en",
+			"tobeReadSMS":       "1",
 			"totalNumSMS":       "14",
 			"isSMSFull":         "0",
 			"total_send":        "3450",
@@ -281,31 +286,52 @@ func run_action(ctx iris.Context) {
 			"cur_send":          "8029",
 			"cur_recv":          "5014",
 			"threshold_percent": "90",
-			"apStatus":          "1",
+			"apStatus":          strings.Contains(valFilter(apStatus), "RUNNING"),
+		})
+	case `set_network_config`:
+		temp := make(iris.Map)
+		var body_buffer []byte
+		body_buffer, _ = ctx.GetBody()
+		values, _ := url.ParseQuery(string(body_buffer))
+		_ = json.Unmarshal([]byte(values.Get("set_network_config")), &temp)
+
+		gprsStatus := fmt.Sprintf("settings put global mobile_data %v", temp["gprsStatus"])
+		networkType := fmt.Sprintf("settings put global data_roaming %v", temp["roamingStatus"])
+		roamingStatus := fmt.Sprintf("settings put global preferred_network_mode %v", temp["networkMode"])
+
+		_, _ = exec.Command("sh", "-c", gprsStatus).Output()
+		_, _ = exec.Command("sh", "-c", networkType).Output()
+		_, _ = exec.Command("sh", "-c", roamingStatus).Output()
+		ctx.JSON(iris.Map{
+			"result":        "ok",
+			"gprsStatus":    gprsStatus,
+			"networkType":   networkType,
+			"roamingStatus": roamingStatus,
+		})
+	case `network_setting`:
+		roamingStatus, _ := exec.Command("sh", "-c", "settings get global data_roaming").Output()
+		networkType, _ := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
+		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
+		ctx.JSON(iris.Map{
+			"result":        "ok",
+			"gprsStatus":    valFilter(gprsStatus),
+			"roamingStatus": valFilter(roamingStatus),
+			"networkMode":   valFilter(networkType),
 		})
 	case `network_info`:
-		networkName, _1 := exec.Command("/system/bin/getprop", "gsm.sim.operator.alpha").Output()
-		networkType, _2 := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
-		simStatus, _3 := exec.Command("/system/bin/getprop", "gsm.sim.state").Output()
-		gprsStatus, _4 := exec.Command("settings", "get", "global", "mobile_data").Output()
-		signalStrength, _5 := exec.Command("/system/bin/getprop", "vendor.ril.nw.signalstrength.lte.1").Output()
-		if _1 != nil || _2 != nil || _3 != nil || _4 != nil || _5 != nil {
-			ctx.StopWithError(500, _1)
-			ctx.StopWithError(500, _2)
-			ctx.StopWithError(500, _3)
-			ctx.StopWithError(500, _4)
-			ctx.StopWithError(500, _5)
-			return
-		}
+		networkName, _ := exec.Command("/system/bin/getprop", "gsm.sim.operator.alpha").Output()
+		networkType, _ := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
+		simStatus, _ := exec.Command("/system/bin/getprop", "gsm.sim.state").Output()
+		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
+		signalStrength, _ := exec.Command("/system/bin/getprop", "vendor.ril.nw.signalstrength.lte.1").Output()
 		ctx.JSON(iris.Map{
 			"result":         "ok",
-			"networkName":    string(networkName),
-			"networkType":    string(networkType),
-			"simStatus":      strings.Contains(string(simStatus), "LOADED"),
-			"gprsStatus":     string(gprsStatus),
-			"signalStrength": strings.Split(string(signalStrength), ",")[0],
+			"networkName":    valFilter(networkName),
+			"networkType":    valFilter(networkType),
+			"simStatus":      strings.Contains(valFilter(simStatus), "LOADED"),
+			"gprsStatus":     valFilter(gprsStatus),
+			"signalStrength": strings.Split(valFilter(signalStrength), ",")[0],
 		})
-
 	case `network_speed`:
 		upload := rand.Int31()
 		download := rand.Int31()
@@ -322,10 +348,14 @@ func run_action(ctx iris.Context) {
 		}
 		ctx.Write(body)
 	default:
-		ctx.WriteString("REQUEST IS FUCKED BY action = " + action)
+		ctx.WriteString("REQUEST IS FAILED BY action = " + action)
 	}
 
 	ctx.StatusCode(200)
+}
+
+func valFilter(val []byte) string {
+	return strings.TrimRight(string(val), "\n")
 }
 
 type XmlItems struct {
