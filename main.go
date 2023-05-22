@@ -289,34 +289,53 @@ func run_action(ctx iris.Context) {
 			"apStatus":          strings.Contains(valFilter(apStatus), "RUNNING"),
 		})
 	case `set_network_config`:
-		temp := make(iris.Map)
-		var body_buffer []byte
-		body_buffer, _ = ctx.GetBody()
-		values, _ := url.ParseQuery(string(body_buffer))
-		_ = json.Unmarshal([]byte(values.Get("set_network_config")), &temp)
+		params := PostJsonDecoder(ctx, `set_network_config`)
 
-		gprsStatus := fmt.Sprintf("settings put global mobile_data %v", temp["gprsStatus"])
-		networkType := fmt.Sprintf("settings put global data_roaming %v", temp["roamingStatus"])
-		roamingStatus := fmt.Sprintf("settings put global preferred_network_mode %v", temp["networkMode"])
+		// 11 = 4G
+		// 9 = 4G/3G
+		// 3 = 3G
+		switch params["networkMode"] {
+		case "0":
+			params["networkMode"] = "9"
+		case "1":
+			params["networkMode"] = "11"
+		case "2":
+			params["networkMode"] = "3"
+		default:
+			ctx.StopWithText(500, "param error")
+			return
+		}
 
+		gprsStatus := fmt.Sprintf("settings put global mobile_data %v", params["gprsStatus"])
+		roamingStatus := fmt.Sprintf("settings put global data_roaming %v", params["roamingStatus"])
+		networkType := fmt.Sprintf("settings put global preferred_network_mode %v", params["networkMode"])
 		_, _ = exec.Command("sh", "-c", gprsStatus).Output()
 		_, _ = exec.Command("sh", "-c", networkType).Output()
 		_, _ = exec.Command("sh", "-c", roamingStatus).Output()
 		ctx.JSON(iris.Map{
-			"result":        "ok",
-			"gprsStatus":    gprsStatus,
-			"networkType":   networkType,
-			"roamingStatus": roamingStatus,
+			"result": "ok",
 		})
 	case `network_setting`:
 		roamingStatus, _ := exec.Command("sh", "-c", "settings get global data_roaming").Output()
-		networkType, _ := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
+		networkType, _ := exec.Command("sh", "-c", "settings get global preferred_network_mode").Output()
 		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
+		_networkType := ""
+		switch valFilter(networkType) {
+		case "9":
+			_networkType = "0"
+		case "11":
+			_networkType = "1"
+		case "3":
+			_networkType = "2"
+		default:
+			ctx.StopWithText(500, "param error")
+			return
+		}
 		ctx.JSON(iris.Map{
 			"result":        "ok",
 			"gprsStatus":    valFilter(gprsStatus),
 			"roamingStatus": valFilter(roamingStatus),
-			"networkMode":   valFilter(networkType),
+			"networkMode":   _networkType,
 		})
 	case `network_info`:
 		networkName, _ := exec.Command("/system/bin/getprop", "gsm.sim.operator.alpha").Output()
@@ -352,6 +371,15 @@ func run_action(ctx iris.Context) {
 	}
 
 	ctx.StatusCode(200)
+}
+
+func PostJsonDecoder(ctx iris.Context, action string) map[string]interface{} {
+	temp := make(iris.Map)
+	var body_buffer []byte
+	body_buffer, _ = ctx.GetBody()
+	values, _ := url.ParseQuery(string(body_buffer))
+	_ = json.Unmarshal([]byte(values.Get(action)), &temp)
+	return temp
 }
 
 func valFilter(val []byte) string {

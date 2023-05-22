@@ -215,6 +215,14 @@ function setOtherNetwork() {
             console.log("network_setting:" + result);
             let data = JSON.parse(result);
             if (data.result !== "ok") { networkFlag = false }
+            setTimeout(function () {
+                if (networkFlag && dataThresholdFlag && connectionFlag) { toastr.success($("#net-tip1").html()); }
+                else {
+                    if (!networkFlag) { toastr.error($("#net-tip6").html()); }
+                    if (!dataThresholdFlag) { toastr.error($("#net-tip7").html()); }
+                    if (!connectionFlag) { toastr.error($("#net-tip8").html()); }
+                }
+            }, 1000);
         },
     })
     //设置阈值
