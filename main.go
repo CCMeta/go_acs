@@ -148,18 +148,27 @@ func run_action(ctx iris.Context) {
 		firmwarewVersion, _ := exec.Command("/system/bin/getprop", "ro.mediatek.version.release").Output()
 		serialNumber, _ := exec.Command("/system/bin/getprop", "ro.serialno").Output()
 		imei, _ := exec.Command("service", "call", "iphonesubinfo", "1").Output()
-
 		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
 		if err != nil {
 			ctx.StopWithError(500, err)
 			return
 		}
+
 		wifi_obj := new(WiFiXML)
 		if err = xml.Unmarshal(wifi_text, wifi_obj); err != nil {
 			ctx.StopWithError(500, err)
 			return
 		}
 		mac_addr := wifi_obj.SoftAp.AP_Strings[2].VALUE
+
+		wanIP_text, _ := exec.Command("sh", "-c", "(ifconfig ccmni0 && ifconfig ccmni1) | grep 'inet addr:'").Output()
+
+		wanIP := ""
+		if len(wanIP_text) > 1 {
+			wanIP = strings.ReplaceAll(
+				strings.ReplaceAll(string(wanIP_text), "inet addr:", ""),
+				"  Mask:255.0.0.0", "")
+		}
 
 		ctx.JSON(iris.Map{
 			"result":           "ok",
@@ -171,7 +180,7 @@ func run_action(ctx iris.Context) {
 			"firmwarewVersion": string(firmwarewVersion),
 			"webUIVersion":     "随便自定义1_1_1",
 			"mac":              mac_addr,
-			"wanIP":            "10.40.86.109",
+			"wanIP":            wanIP,
 		})
 	case `get_pin_setting`:
 		pinRemain, err1 := exec.Command("/system/bin/getprop", "vendor.gsm.sim.retry.pin1").Output()
