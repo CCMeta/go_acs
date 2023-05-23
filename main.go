@@ -34,8 +34,8 @@ func main() {
 	api := app.Party("/api")
 	{
 		api.Use(iris.Compression)
-		api.Get("/{action}", run_action)
-		api.Post("/{action}", run_action)
+		api.Get("/{action}", dispatcher)
+		api.Post("/{action}", dispatcher)
 	}
 
 	// for static html files
@@ -46,7 +46,7 @@ func main() {
 			page := ctx.Params().Get("page")
 			ctx.View(page)
 		})
-		// html.Post("/{action}", run_action)
+		// html.Post("/{action}", dispatcher)
 	}
 
 	/*************************Starting Server****************************/
@@ -141,7 +141,7 @@ type WiFiXML struct {
 	} `xml:"SoftAp"`
 }
 
-func run_action(ctx iris.Context) {
+func dispatcher(ctx iris.Context) {
 
 	action := ctx.Params().Get("action")
 	switch action {
@@ -243,7 +243,7 @@ func run_action(ctx iris.Context) {
 		ctx.WriteString(valFilter(clients))
 	case `connected_devices`:
 		//ip neigh show dev ap0
-		clients_buf, _ := exec.Command("sh", "-c", "ip -4 neigh show dev wlan0").Output()
+		clients_buf, _ := exec.Command("sh", "-c", "ip -4 neigh show dev ap0").Output()
 		devices := []iris.Map{}
 		clients_list := strings.Split(valFilter(clients_buf), "\n")
 
