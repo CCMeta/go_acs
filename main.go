@@ -149,7 +149,7 @@ func dispatcher(ctx iris.Context) {
 	case `get_device_info`:
 		firmwarewVersion, _ := exec.Command("/system/bin/getprop", "ro.mediatek.version.release").Output()
 		serialNumber, _ := exec.Command("/system/bin/getprop", "ro.serialno").Output()
-		imei, _ := exec.Command("service", "call", "iphonesubinfo", "1").Output()
+		imei, _ := exec.Command("sh", "-c", "cmd phone get-imei 0").Output()
 		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
 		if err != nil {
 			ctx.StopWithError(500, err)
