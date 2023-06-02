@@ -50,7 +50,7 @@ func main() {
 	}
 
 	/*************************Starting Server****************************/
-	addr := fmt.Sprintf(":%s", getenv("PORT", "9001"))
+	addr := fmt.Sprintf("0.0.0.0:%s", getenv("PORT", "9001"))
 	app.Listen(addr)
 }
 
@@ -329,7 +329,7 @@ func dispatcher(ctx iris.Context) {
 		networkType, _ := exec.Command("sh", "-c", "settings get global preferred_network_mode").Output()
 		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
 		_networkType := ""
-		switch string(networkType) {
+		switch valFilter(networkType) {
 		case "9":
 			_networkType = "0"
 		case "11":
@@ -337,7 +337,7 @@ func dispatcher(ctx iris.Context) {
 		case "3":
 			_networkType = "2"
 		default:
-			ctx.StopWithText(500, "param error")
+			ctx.StopWithText(500, "param error"+valFilter(networkType))
 			return
 		}
 		ctx.JSON(iris.Map{
@@ -396,7 +396,7 @@ func PostJsonDecoder(ctx iris.Context, action string) map[string]interface{} {
 	temp := make(iris.Map)
 	var body_buffer []byte
 	body_buffer, _ = ctx.GetBody()
-	values, _ := url.ParseQuery(string(body_buffer))
+	values, _ := url.ParseQuery(valFilter(body_buffer))
 	// this is only for int value but not jsons
 	if len(values.Get(action)) < 3 {
 		return iris.Map{
