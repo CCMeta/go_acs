@@ -249,14 +249,16 @@ func dispatcher(ctx iris.Context) {
 
 		for i, v := range clients_list {
 			client_map := strings.Split(v, " ")
-			device := iris.Map{
-				"index":    i,
-				"hostName": client_map[2],
-				"ip_addr":  client_map[0],
-				"mac_addr": client_map[2],
-				"usbShare": "0",
+			if len(client_map) > 2 {
+				device := iris.Map{
+					"index":    i,
+					"hostName": client_map[2],
+					"ip_addr":  client_map[0],
+					"mac_addr": client_map[2],
+					"usbShare": "0",
+				}
+				devices = append(devices, device)
 			}
-			devices = append(devices, device)
 		}
 
 		ctx.JSON(iris.Map{
@@ -264,7 +266,29 @@ func dispatcher(ctx iris.Context) {
 			"totalNum": len(devices),
 			"devices":  devices,
 		})
+	case `get_web_language`:
+		config_buf, _ := os.ReadFile("config.json")
+		config := iris.Map{}
+		_ = json.Unmarshal(config_buf, &config)
+		ctx.JSON(iris.Map{
+			"result":   "ok",
+			"message":  config["language"],
+			"language": config["language"],
+		})
+	case `set_web_language`:
+		params := PostJsonDecoder(ctx, `set_web_language`)
 
+		config_buf, _ := os.ReadFile("config.json")
+		config := iris.Map{}
+		_ = json.Unmarshal(config_buf, &config)
+		config["language"] = params["set_web_language"]
+		config_buf, _ = json.Marshal(config)
+		os.WriteFile("config.json", config_buf, 0666)
+
+		ctx.JSON(iris.Map{
+			"result":  "ok",
+			"message": params["set_web_language"],
+		})
 	case `flowrate_record`:
 		total_send := rand.Int31()
 		total_recv := rand.Int31()
@@ -336,9 +360,12 @@ func dispatcher(ctx iris.Context) {
 			_networkType = "1"
 		case "3":
 			_networkType = "2"
+		case "33,33":
+			_networkType = "33"
 		default:
-			ctx.StopWithText(500, "param error"+valFilter(networkType))
-			return
+			_networkType = valFilter(networkType)
+			// ctx.StopWithText(500, "param error"+valFilter(networkType))
+			// return
 		}
 		ctx.JSON(iris.Map{
 			"result":        "ok",
@@ -397,13 +424,15 @@ func PostJsonDecoder(ctx iris.Context, action string) map[string]interface{} {
 	var body_buffer []byte
 	body_buffer, _ = ctx.GetBody()
 	values, _ := url.ParseQuery(valFilter(body_buffer))
-	// this is only for int value but not jsons
-	if len(values.Get(action)) < 3 {
+
+	err := json.Unmarshal([]byte(values.Get(action)), &temp)
+	if err != nil {
+		// this is only for int value but not jsons
+		// if values.Get(action) is not like {blablabla}
 		return iris.Map{
 			action: values.Get(action),
 		}
 	}
-	_ = json.Unmarshal([]byte(values.Get(action)), &temp)
 	return temp
 }
 
