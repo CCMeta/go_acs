@@ -266,6 +266,35 @@ func dispatcher(ctx iris.Context) {
 			"totalNum": len(devices),
 			"devices":  devices,
 		})
+	case `get_data_threshold`:
+		uptime_byte, _ := exec.Command("sh", "-c", "cat /proc/uptime").Output()
+		uptime := strings.ReplaceAll(strings.Split(valFilter(uptime_byte), " ")[0], ".", "00")
+		config_buf, _ := os.ReadFile("config.json")
+		config := iris.Map{}
+		_ = json.Unmarshal(config_buf, &config)
+		ctx.JSON(iris.Map{
+			"result":         "ok",
+			"message":        "success!",
+			"status":         config["data_threshold_status"],
+			"thresholdValue": config["data_threshold_value"],
+			"resetDay":       config["data_threshold_resetDay"],
+			"runTime":        uptime,
+		})
+	case `set_data_threshold`:
+		params := PostJsonDecoder(ctx, `set_data_threshold`)
+		config_buf, _ := os.ReadFile("config.json")
+		config := iris.Map{}
+		_ = json.Unmarshal(config_buf, &config)
+		config["data_threshold_status"] = fmt.Sprintf("%v", params["status"])
+		config["data_threshold_value"] = fmt.Sprintf("%v", params["thresholdValue"])
+		config["data_threshold_resetDay"] = fmt.Sprintf("%v", params["resetDay"])
+		config_buf, _ = json.Marshal(config)
+		os.WriteFile("config.json", config_buf, 0666)
+
+		ctx.JSON(iris.Map{
+			"result":  "ok",
+			"message": "ok",
+		})
 	case `get_web_language`:
 		config_buf, _ := os.ReadFile("config.json")
 		config := iris.Map{}
