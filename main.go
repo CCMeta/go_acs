@@ -1,6 +1,7 @@
 package main // Look README.md
 
 import (
+	"embed"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -17,13 +18,17 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
+//go:embed html/*
+var embedWeb embed.FS
+
 func main() {
 
-	// init app and load static resource
 	app := iris.Default()
-	tmpl := iris.HTML("./", ".html")
-	app.RegisterView(tmpl)
-	app.HandleDir("./", http.Dir("./"))
+	fsys := iris.PrefixDir("html", http.FS(embedWeb))
+	app.RegisterView(iris.HTML(fsys, ".html"))
+	app.HandleDir("/", fsys)
+
+	// init app and load static resource
 	// db, secret := init_db()
 	// subRouter := api.Router(db, secret)
 	// app.PartyFunc("/", subRouter)
@@ -243,7 +248,7 @@ func dispatcher(ctx iris.Context) {
 		ctx.WriteString(valFilter(clients))
 	case `connected_devices`:
 		//ip neigh show dev ap0
-		clients_buf, _ := exec.Command("sh", "-c", "ip -4 neigh show dev ap0").Output()
+		clients_buf, _ := exec.Command("sh", "-c", "ip -4 neigh show").Output()
 		devices := []iris.Map{}
 		clients_list := strings.Split(valFilter(clients_buf), "\n")
 
