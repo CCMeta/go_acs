@@ -155,6 +155,10 @@ func dispatcher(ctx iris.Context) {
 		firmwarewVersion, _ := exec.Command("/system/bin/getprop", "ro.mediatek.version.release").Output()
 		serialNumber, _ := exec.Command("/system/bin/getprop", "ro.serialno").Output()
 		imei, _ := exec.Command("sh", "-c", "cmd phone get-imei 0").Output()
+		siminfo_buf, _ := exec.Command("sh", "-c", "content query --uri content://telephony/siminfo | head -1").Output()
+		//parse imsi of sim card
+
+		imsi := strings.Split(strings.Split(valFilter(siminfo_buf), ",")[49], "=")[1]
 		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
 		if err != nil {
 			ctx.StopWithError(500, err)
@@ -180,10 +184,10 @@ func dispatcher(ctx iris.Context) {
 		ctx.JSON(iris.Map{
 			"result":           "ok",
 			"serialNumber":     valFilter(serialNumber),
-			"imei":             valFilter(imei),
-			"imsi":             "00000000000000000",
+			"imei":             strings.ReplaceAll(valFilter(imei), "Device IMEI:", ""),
+			"imsi":             imsi,
 			"hardwareVersion":  "1.0.0",
-			"softwarewVersion": "随便自定义1_1_1 和WEBUI重复了？",
+			"softwarewVersion": "随便自定义??",
 			"firmwarewVersion": valFilter(firmwarewVersion),
 			"webUIVersion":     "随便自定义1_1_1",
 			"mac":              mac_addr,
