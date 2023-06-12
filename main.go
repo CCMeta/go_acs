@@ -152,27 +152,23 @@ func dispatcher(ctx iris.Context) {
 	switch action {
 
 	case `get_device_info`:
-		firmwarewVersion, _ := exec.Command("/system/bin/getprop", "ro.mediatek.version.release").Output()
-		serialNumber, _ := exec.Command("/system/bin/getprop", "ro.serialno").Output()
-		imei, _ := exec.Command("sh", "-c", "cmd phone get-imei 0").Output()
-		siminfo_buf, _ := exec.Command("sh", "-c", "content query --uri content://telephony/siminfo | head -1").Output()
+		firmwarewVersion := exe_cmd("getprop ro.mediatek.version.release")
+		serialNumber := exe_cmd("getprop ro.serialno")
+		imei := exe_cmd("cmd phone get-imei 0")
+		siminfo_buf := exe_cmd("content query --uri content://telephony/siminfo | head -1")
 		//parse imsi of sim card
 
 		imsi := strings.Split(strings.Split(valFilter(siminfo_buf), ",")[49], "=")[1]
-		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
-		if err != nil {
-			ctx.StopWithError(500, err)
-			return
-		}
+		wifi_text := exe_cmd("cat /data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml")
 
 		wifi_obj := new(WiFiXML)
-		if err = xml.Unmarshal(wifi_text, wifi_obj); err != nil {
+		if err := xml.Unmarshal(wifi_text, wifi_obj); err != nil {
 			ctx.StopWithError(500, err)
 			return
 		}
 		mac_addr := wifi_obj.SoftAp.AP_Strings[2].VALUE
 
-		wanIP_text, _ := exec.Command("sh", "-c", "(ifconfig ccmni0 && ifconfig ccmni1) | grep 'inet addr:'").Output()
+		wanIP_text := exe_cmd("(ifconfig ccmni0 && ifconfig ccmni1) | grep 'inet addr:'")
 
 		wanIP := ""
 		if len(wanIP_text) > 1 {
@@ -194,18 +190,13 @@ func dispatcher(ctx iris.Context) {
 			"wanIP":            wanIP,
 		})
 	case `get_pin_setting`:
-		pinRemain, err1 := exec.Command("/system/bin/getprop", "vendor.gsm.sim.retry.pin1").Output()
-		pinEnabled, err2 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
-		pinStatus, err3 := exec.Command("/system/bin/getprop", "gsm.slot1.num.pin1").Output()
+		pinRemain := exe_cmd("getprop vendor.gsm.sim.retry.pin1")
+		pinEnabled := exe_cmd("getprop gsm.slot1.num.pin1")
+		pinStatus := exe_cmd("getprop gsm.slot1.num.pin1")
 		_pinRemain, _ := strconv.Atoi(valFilter(pinRemain[:len(pinRemain)-1]))
 		_pinEnabled, _ := strconv.Atoi(valFilter(pinEnabled[:len(pinEnabled)-1]))
 		_pinStatus, _ := strconv.Atoi(valFilter(pinStatus[:len(pinStatus)-1]))
-		if err3 != nil || err2 != nil || err1 != nil {
-			ctx.StopWithError(500, err3)
-			ctx.StopWithError(500, err2)
-			ctx.StopWithError(500, err1)
-			return
-		}
+
 		ctx.JSON(iris.Map{
 			"result":     "ok",
 			"pinRemain":  _pinRemain,
@@ -213,13 +204,10 @@ func dispatcher(ctx iris.Context) {
 			"pinStatus":  _pinStatus,
 		})
 	case `get_wifi_settings`:
-		wifi_text, err := exec.Command("cat", "/data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml").Output()
-		if err != nil {
-			ctx.StopWithError(500, err)
-			return
-		}
+		wifi_text := exe_cmd("cat /data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml")
+
 		wifi_obj := new(WiFiXML)
-		if err = xml.Unmarshal(wifi_text, wifi_obj); err != nil {
+		if err := xml.Unmarshal(wifi_text, wifi_obj); err != nil {
 			ctx.StopWithError(500, err)
 			return
 		}
@@ -244,15 +232,11 @@ func dispatcher(ctx iris.Context) {
 			// "autoSleep":     0,
 		})
 	case `ip`:
-		clients, err := exec.Command("sh", "-c", "ip -4 neigh | grep ap0 | grep REACHABLE").Output()
-		if err != nil {
-			ctx.StopWithError(500, err)
-			return
-		}
+		clients := exe_cmd("ip -4 neigh | grep ap0 | grep REACHABLE")
 		ctx.WriteString(valFilter(clients))
 	case `connected_devices`:
 		//ip neigh show dev ap0
-		clients_buf, _ := exec.Command("sh", "-c", "ip -4 neigh show").Output()
+		clients_buf := exe_cmd("ip -4 neigh show")
 		devices := []iris.Map{}
 		clients_list := strings.Split(valFilter(clients_buf), "\n")
 
@@ -276,53 +260,39 @@ func dispatcher(ctx iris.Context) {
 			"devices":  devices,
 		})
 	case `get_data_threshold`:
-		uptime_byte, _ := exec.Command("sh", "-c", "cat /proc/uptime").Output()
+		uptime_byte := exe_cmd("cat /proc/uptime")
 		uptime := strings.ReplaceAll(strings.Split(valFilter(uptime_byte), " ")[0], ".", "00")
-		config_buf, _ := os.ReadFile("config.json")
-		config := iris.Map{}
-		_ = json.Unmarshal(config_buf, &config)
+		data_threshold_status := exe_cmd("getprop persist.sagereal.data_threshold_status")
+		data_threshold_value := exe_cmd("getprop persist.sagereal.data_threshold_value")
+		data_threshold_resetDay := exe_cmd("getprop persist.sagereal.data_threshold_resetDay")
+
 		ctx.JSON(iris.Map{
 			"result":         "ok",
 			"message":        "success!",
-			"status":         config["data_threshold_status"],
-			"thresholdValue": config["data_threshold_value"],
-			"resetDay":       config["data_threshold_resetDay"],
+			"status":         valFilter(data_threshold_status),
+			"thresholdValue": valFilter(data_threshold_value),
+			"resetDay":       valFilter(data_threshold_resetDay),
 			"runTime":        uptime,
 		})
 	case `set_data_threshold`:
 		params := PostJsonDecoder(ctx, `set_data_threshold`)
-		config_buf, _ := os.ReadFile("config.json")
-		config := iris.Map{}
-		_ = json.Unmarshal(config_buf, &config)
-		config["data_threshold_status"] = fmt.Sprintf("%v", params["status"])
-		config["data_threshold_value"] = fmt.Sprintf("%v", params["thresholdValue"])
-		config["data_threshold_resetDay"] = fmt.Sprintf("%v", params["resetDay"])
-		config_buf, _ = json.Marshal(config)
-		os.WriteFile("config.json", config_buf, 0666)
-
+		exe_cmd(fmt.Sprintf("setprop persist.sagereal.data_threshold_status %v", params["status"]))
+		exe_cmd(fmt.Sprintf("setprop persist.sagereal.data_threshold_value %v", params["thresholdValue"]))
+		exe_cmd(fmt.Sprintf("setprop persist.sagereal.data_threshold_resetDay %v", params["resetDay"]))
 		ctx.JSON(iris.Map{
 			"result":  "ok",
 			"message": "ok",
 		})
 	case `get_web_language`:
-		config_buf, _ := os.ReadFile("config.json")
-		config := iris.Map{}
-		_ = json.Unmarshal(config_buf, &config)
+		language := exe_cmd("getprop persist.sagereal.language")
 		ctx.JSON(iris.Map{
 			"result":   "ok",
-			"message":  config["language"],
-			"language": config["language"],
+			"language": valFilter(language),
+			"message":  valFilter(language),
 		})
 	case `set_web_language`:
 		params := PostJsonDecoder(ctx, `set_web_language`)
-
-		config_buf, _ := os.ReadFile("config.json")
-		config := iris.Map{}
-		_ = json.Unmarshal(config_buf, &config)
-		config["language"] = params["set_web_language"]
-		config_buf, _ = json.Marshal(config)
-		os.WriteFile("config.json", config_buf, 0666)
-
+		exe_cmd(fmt.Sprintf("setprop persist.sagereal.language %v", params["set_web_language"]))
 		ctx.JSON(iris.Map{
 			"result":  "ok",
 			"message": params["set_web_language"],
@@ -337,13 +307,13 @@ func dispatcher(ctx iris.Context) {
 		  "total_send": "Cg=="
 		}
 		*/
-		cur_recv, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/rx_bytes").Output()
-		cur_send, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/tx_bytes").Output()
-		total_send, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_send").Output()
-		total_recv, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_recv").Output()
+		cur_recv := exe_cmd("cat /sys/class/net/wlan0/statistics/rx_bytes")
+		cur_send := exe_cmd("cat /sys/class/net/wlan0/statistics/tx_bytes")
+		total_send := exe_cmd("getprop persist.sagereal.total_send")
+		total_recv := exe_cmd("getprop persist.sagereal.total_recv")
 		if len(valFilter(total_send)) < 1 || len(valFilter(total_recv)) < 1 {
-			exec.Command("sh", "-c", "setprop persist.sagereal.total_send 0").Output()
-			exec.Command("sh", "-c", "setprop persist.sagereal.total_recv 0").Output()
+			exe_cmd("setprop persist.sagereal.total_send 0")
+			exe_cmd("setprop persist.sagereal.total_recv 0")
 		}
 		// body := fmt.Sprintf(`{	"result": "ok",	"upload": "%v","download": "%v"}`, upload, download)
 		// ctx.WritevalFilter(body)
@@ -355,8 +325,8 @@ func dispatcher(ctx iris.Context) {
 			"cur_recv":   valFilter(cur_recv),
 		})
 	case `navtop_info`:
-		batteryRemain, _ := exec.Command("sh", "-c", "dumpsys battery get level").Output()
-		apStatus, _ := exec.Command("sh", "-c", "ifconfig ap0 | grep RUNNING").Output()
+		batteryRemain := exe_cmd("dumpsys battery get level")
+		apStatus := exe_cmd("ifconfig ap0 | grep RUNNING")
 
 		ctx.JSON(iris.Map{
 			"result":            "ok",
@@ -390,19 +360,19 @@ func dispatcher(ctx iris.Context) {
 			return
 		}
 
-		gprsStatus := fmt.Sprintf("settings put global mobile_data %v", params["gprsStatus"])
-		roamingStatus := fmt.Sprintf("settings put global data_roaming %v", params["roamingStatus"])
+		gprsStatus := fmt.Sprintf("settings put global mobile_data1 %v", params["gprsStatus"])
+		roamingStatus := fmt.Sprintf("settings put global data_roaming1 %v", params["roamingStatus"])
 		networkType := fmt.Sprintf("settings put global preferred_network_mode %v", params["networkMode"])
-		_, _ = exec.Command("sh", "-c", gprsStatus).Output()
-		_, _ = exec.Command("sh", "-c", networkType).Output()
-		_, _ = exec.Command("sh", "-c", roamingStatus).Output()
+		exe_cmd(gprsStatus)
+		exe_cmd(networkType)
+		exe_cmd(roamingStatus)
 		ctx.JSON(iris.Map{
 			"result": "ok",
 		})
 	case `network_setting`:
-		roamingStatus, _ := exec.Command("sh", "-c", "settings get global data_roaming").Output()
-		networkType, _ := exec.Command("sh", "-c", "settings get global preferred_network_mode").Output()
-		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
+		roamingStatus := exe_cmd("settings get global data_roaming1")
+		networkType := exe_cmd("settings get global preferred_network_mode")
+		gprsStatus := exe_cmd("settings get global mobile_data1")
 		_networkType := ""
 		switch valFilter(networkType) {
 		case "9":
@@ -425,11 +395,12 @@ func dispatcher(ctx iris.Context) {
 			"networkMode":   _networkType,
 		})
 	case `network_info`:
-		networkName, _ := exec.Command("/system/bin/getprop", "gsm.sim.operator.alpha").Output()
-		networkType, _ := exec.Command("/system/bin/getprop", "gsm.network.type").Output()
-		simStatus, _ := exec.Command("/system/bin/getprop", "gsm.sim.state").Output()
-		gprsStatus, _ := exec.Command("settings", "get", "global", "mobile_data").Output()
-		signalStrength, _ := exec.Command("/system/bin/getprop", "vendor.ril.nw.signalstrength.lte.1").Output()
+
+		networkName := exe_cmd("getprop gsm.sim.operator.alpha")
+		networkType := exe_cmd("getprop gsm.network.type")
+		simStatus := exe_cmd("getprop gsm.sim.state")
+		gprsStatus := exe_cmd("settings get global mobile_data1")
+		signalStrength := exe_cmd("getprop vendor.ril.nw.signalstrength.lte.1")
 		ctx.JSON(iris.Map{
 			"result":         "ok",
 			"networkName":    valFilter(networkName),
@@ -446,33 +417,26 @@ func dispatcher(ctx iris.Context) {
 			"upload":   upload,
 			"download": download,
 		})
-	case `getprop`:
-		body, err := exec.Command("/system/bin/getprop").Output()
-		if err != nil {
-			ctx.StopWithError(500, err)
-			return
-		}
-		ctx.Write(body)
 	case `restart`:
 		params := PostJsonDecoder(ctx, `restart`)
 		if params["restart"] == "1" {
 
 			// combine total traffic to system-props
-			cur_recv, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/rx_bytes").Output()
-			cur_send, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/tx_bytes").Output()
-			total_send, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_send").Output()
-			total_recv, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_recv").Output()
+			cur_recv := exe_cmd("cat /sys/class/net/wlan0/statistics/rx_bytes")
+			cur_send := exe_cmd("cat /sys/class/net/wlan0/statistics/tx_bytes")
+			total_send := exe_cmd("getprop persist.sagereal.total_send")
+			total_recv := exe_cmd("getprop persist.sagereal.total_recv")
 			total_send_int, _ := strconv.Atoi(valFilter(total_send))
 			cur_send_int, _ := strconv.Atoi(valFilter(cur_send))
 			total_recv_int, _ := strconv.Atoi(valFilter(total_recv))
 			cur_recv_int, _ := strconv.Atoi(valFilter(cur_recv))
 			total_send_cmd := fmt.Sprintf("setprop persist.sagereal.total_send %d", total_send_int+cur_send_int)
 			total_recv_cmd := fmt.Sprintf("setprop persist.sagereal.total_recv %d", total_recv_int+cur_recv_int)
-			exec.Command("sh", "-c", total_send_cmd).Output()
-			exec.Command("sh", "-c", total_recv_cmd).Output()
+			exe_cmd(total_send_cmd)
+			exe_cmd(total_recv_cmd)
 
 			//async
-			go exec.Command("sh", "-c", "sleep 5 && reboot").Output()
+			go exe_cmd("sleep 5 && reboot")
 		}
 		ctx.JSON(iris.Map{
 			"result": "ok",
@@ -504,6 +468,15 @@ func PostJsonDecoder(ctx iris.Context, action string) map[string]interface{} {
 
 func valFilter(val []byte) string {
 	return strings.TrimRight(string(val), "\n")
+}
+
+func exe_cmd(cmd string) []byte {
+	res, err := exec.Command("sh", "-c", cmd).Output()
+	if err != nil {
+		println(err.Error())
+		return nil
+	}
+	return res
 }
 
 type XmlItems struct {
