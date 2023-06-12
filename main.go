@@ -324,18 +324,31 @@ func dispatcher(ctx iris.Context) {
 			"message": params["set_web_language"],
 		})
 	case `flowrate_record`:
-		total_send := rand.Int31()
-		total_recv := rand.Int31()
-		cur_send := rand.Int31()
-		cur_recv := rand.Int31()
+		/**
+		{
+		  "cur_recv": "MTY4MDYxMTAK",
+		  "cur_send": "MzU3Mzc4MQo=",
+		  "result": "ok",
+		  "total_recv": "Cg==",
+		  "total_send": "Cg=="
+		}
+		*/
+		cur_recv, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/rx_bytes").Output()
+		cur_send, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/tx_bytes").Output()
+		total_send, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_send").Output()
+		total_recv, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_recv").Output()
+		if len(valFilter(total_send)) < 1 || len(valFilter(total_recv)) < 1 {
+			exec.Command("sh", "-c", "setprop persist.sagereal.total_send 0").Output()
+			exec.Command("sh", "-c", "setprop persist.sagereal.total_recv 0").Output()
+		}
 		// body := fmt.Sprintf(`{	"result": "ok",	"upload": "%v","download": "%v"}`, upload, download)
 		// ctx.WritevalFilter(body)
 		ctx.JSON(iris.Map{
 			"result":     "ok",
-			"total_send": total_send,
-			"total_recv": total_recv,
-			"cur_send":   cur_send,
-			"cur_recv":   cur_recv,
+			"total_send": valFilter(total_send),
+			"total_recv": valFilter(total_recv),
+			"cur_send":   valFilter(cur_send),
+			"cur_recv":   valFilter(cur_recv),
 		})
 	case `navtop_info`:
 		batteryRemain, _ := exec.Command("sh", "-c", "dumpsys battery get level").Output()
@@ -439,6 +452,21 @@ func dispatcher(ctx iris.Context) {
 	case `restart`:
 		params := PostJsonDecoder(ctx, `restart`)
 		if params["restart"] == "1" {
+
+			// combine total traffic to system-props
+			cur_recv, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/rx_bytes").Output()
+			cur_send, _ := exec.Command("sh", "-c", "cat /sys/class/net/wlan0/statistics/tx_bytes").Output()
+			total_send, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_send").Output()
+			total_recv, _ := exec.Command("sh", "-c", "getprop persist.sagereal.total_recv").Output()
+			total_send_int, _ := strconv.Atoi(valFilter(total_send))
+			cur_send_int, _ := strconv.Atoi(valFilter(cur_send))
+			total_recv_int, _ := strconv.Atoi(valFilter(total_recv))
+			cur_recv_int, _ := strconv.Atoi(valFilter(cur_recv))
+			total_send_cmd := fmt.Sprintf("setprop persist.sagereal.total_send %d", total_send_int+cur_send_int)
+			total_recv_cmd := fmt.Sprintf("setprop persist.sagereal.total_recv %d", total_recv_int+cur_recv_int)
+			exec.Command("sh", "-c", total_send_cmd).Output()
+			exec.Command("sh", "-c", total_recv_cmd).Output()
+
 			//async
 			go exec.Command("sh", "-c", "sleep 5 && reboot").Output()
 		}
