@@ -71,6 +71,7 @@ $("#threshold_switch").on("change", function () {
 /*add for dataThreshold llh 20220601 end*/
 //获取网络名称、信号强度、网络类型
 let $strength2 = $(".strength2"), $strength3 = $(".strength3"), $strengthText = $("#strengthText");
+let global_cur_send,global_cur_recv
 function openMobileNetwork() { 
     // GetNetworkSpeed(); 
     GetNetwork(); 
@@ -396,20 +397,19 @@ function getThr() {
             $("#totalThre").html(total[0]); $("#totalUnit").html(total[1]);
             $("#sessionThre").html(current[0]); $("#sessionUnit").html(current[1]);
             $usedValue.html(total[0] + "\xa0" + total[1]);
-            if (sessionStorage.getItem("cur_send") && sessionStorage.getItem("cur_recv")) {
+            if (global_cur_recv && global_cur_send) {
                 const download = SpeedCal(parseInt(
-                    (data.cur_recv - sessionStorage.getItem("cur_recv")) / 3
+                    (data.cur_recv - global_cur_recv) / 3
                 ))
                 const upload = SpeedCal(parseInt(
-                    (data.cur_send - sessionStorage.getItem("cur_send")) / 3
+                    (data.cur_send - global_cur_send) / 3
                 ))
 
                 $("#upSpeed").html(upload[0]); $("#upUnit").html(upload[1]);
                 $("#downSpeed").html(download[0]); $("#downUnit").html(download[1]);
             }
-
-            sessionStorage.setItem("cur_send", data.cur_send)
-            sessionStorage.setItem("cur_recv", data.cur_recv)
+            global_cur_recv = data.cur_recv
+            global_cur_send = data.cur_send
         }
     })
 }
