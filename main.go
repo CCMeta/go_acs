@@ -19,14 +19,14 @@ import (
 )
 
 //go:embed html/*
-var embedWeb embed.FS
+var embed_FS embed.FS
 
 func main() {
 
 	app := iris.Default()
-	fsys := iris.PrefixDir("html", http.FS(embedWeb))
-	app.RegisterView(iris.HTML(fsys, ".html"))
-	app.HandleDir("/", fsys)
+	assets := iris.PrefixDir("html", http.FS(embed_FS))
+	app.RegisterView(iris.HTML(assets, ".html"))
+	app.HandleDir("/", assets)
 
 	// init app and load static resource
 	// db, secret := init_db()
