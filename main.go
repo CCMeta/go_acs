@@ -158,7 +158,7 @@ func dispatcher(ctx iris.Context) {
 		siminfo_buf := exe_cmd("content query --uri content://telephony/siminfo | head -1")
 		//parse imsi of sim card
 
-		imsi := strings.Split(strings.Split(valFilter(siminfo_buf), ",")[49], "=")[1]
+		imsi := strings.Split(valFilter(siminfo_buf), ",")[49]
 		wifi_text := exe_cmd("cat /data/misc/apexdata/com.android.wifi/WifiConfigStoreSoftAp.xml")
 
 		wifi_obj := new(WiFiXML)
