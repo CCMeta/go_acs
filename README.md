@@ -11,9 +11,9 @@ build: go build -o wm24
 
 ## CONFIGS
 
-- priest.sagereal.total_send
-- priest.sagereal.total_recv
-- priest.sagereal.data_threshold_status
-- priest.sagereal.data_threshold_value
-- priest.sagereal.data_threshold_resetDay
-- priest.sagereal.language
+- persist.sagereal.total_send
+- persist.sagereal.total_recv
+- persist.sagereal.data_threshold_status
+- persist.sagereal.data_threshold_value
+- persist.sagereal.data_threshold_resetDay
+- persist.sagereal.language
