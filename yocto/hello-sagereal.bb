@@ -15,8 +15,8 @@ inherit autotools-brokensep pkgconfig update-rc.d
 
 PROVIDES = "hello-sagereal"
 
-EXTERNALSRC = "${OEROOT}/source/unisoc/demo/hello-sagereal"
-EXTERNALSRC_BUILD = "${OEROOT}/source/unisoc/demo/hello-sagereal"
+EXTERNALSRC = "${OEROOT}/source/sagereal/hello-sagereal"
+EXTERNALSRC_BUILD = "${OEROOT}/source/sagereal/hello-sagereal"
 
 
 

@@ -66,7 +66,6 @@ RDEPENDS_packagegroup-unisoc-console ??= "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'storage','packagegroup-unisoc-base-storage', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'tsupplicant','packagegroup-unisoc-base-tsupplicant', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'pm', 'packagegroup-unisoc-base-pm', '',d)} \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'hello', 'packagegroup-unisoc-base-hello', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'hello-sagereal', 'packagegroup-unisoc-base-hello-sagereal', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'powerd', 'packagegroup-unisoc-base-powerd', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'terminal', 'packagegroup-unisoc-base-terminal', '',d)} \

@@ -36,7 +36,6 @@ PACKAGES = ' \
     ${@bb.utils.contains('MACHINE_FEATURES', 'tsupplicant','packagegroup-unisoc-base-tsupplicant', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'aprd','packagegroup-unisoc-base-aprd', '',d)} \
     packagegroup-unisoc-base-rgbled \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'hello', 'packagegroup-unisoc-base-hello', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'hello-sagereal', 'packagegroup-unisoc-base-hello-sagereal', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'bt-tool', 'packagegroup-unisoc-base-bt-tool', '',d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'engpc', 'packagegroup-unisoc-base-engpc', '',d)} \
@@ -915,12 +914,6 @@ RDEPENDS_packagegroup-unisoc-base-hostapd = "\
 SUMMARY_packagegroup-unisoc-base-batterymanager = "batterymanager"
 RDEPENDS_packagegroup-unisoc-base-batterymanager = "\
      batterymanager \
-"
-
-# for hello-ko test
-SUMMARY_packagegroup-unisoc-base-hello = "kernel module"
-RDEPENDS_packagegroup-unisoc-base-hello = "\
-    hello-ko \
 "
 
 # for hello sagereal
