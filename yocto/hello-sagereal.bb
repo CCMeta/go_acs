@@ -26,9 +26,9 @@ do_compile () {
 }
 
 do_install () {
-    install -d ${D}${bindir}/
-    install -m 0777 ${B}/hello-sagereal1 ${D}${bindir}/
-    install -m 0777 ${B}/wm24_api ${D}${bindir}/
+    install -d ${D}${localstatedir}
+    install -m 0777 ${B}/hello-sagereal1 ${D}${localstatedir}/
+    install -m 0777 ${B}/wm24_api ${D}${localstatedir}/
 }
 
 do_install_append () {
